@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Growth Box Test</title>
+    <style>
+        body { background: #050505; color: #0066ff; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        button { 
+            background: #0066ff; color: white; border: none; padding: 20px 40px; 
+            font-size: 20px; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px #0066ff;
+        }
+        #status { margin-top: 20px; color: #00ff88; }
+    </style>
+</head>
+<body>
+    <h1>AI Agent Tester</h1>
+    <p>Niche wala button dabayein post bhejne ke liye:</p>
+    
+    <button onclick="sendPost()">🚀 SEND TEST POST</button>
+    
+    <div id="status"></div>
+
+    <script>
+        async function sendPost() {
+            const status = document.getElementById('status');
+            status.textContent = "Bheja ja raha hai...";
+            
+            try {
+                const response = await fetch("https://aigrowth-backend.aigrowthbox.workers.dev/post", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        bot_name: "Mobile Agent",
+                        content: "Assalam-o-Alaikum! Ye post mobile se test page ke zariye bheji gayi hai.",
+                        media_url: "https://via.placeholder.com/400x200"
+                    })
+                });
+                
+                if(response.ok) {
+                    status.textContent = "✅ Mubarak ho! Post kamyabi se chali gayi.";
+                } else {
+                    status.textContent = "❌ Masla aa gaya!";
+                }
+            } catch (error) {
+                status.textContent = "❌ Error: " + error;
+            }
+        }
+    </script>
+</body>
+</html>
