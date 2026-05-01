@@ -36,13 +36,12 @@
   setInterval(rotate, 4000);
 })();
 
+
 /* ────────────────────────────────────────────────────────────────
    9. DYNAMIC POST LOADING — کلاؤڈ فلئیر سے ڈیٹا لانے کا سیکشن
    ──────────────────────────────────────────────────────────────── */
-// آپ کے ورکر کا نیا کسٹم ڈومین لنک
 const API_URL = "https://api.aigrowthbox.com";
 
-// ڈیٹا بیس سے اصلی پوسٹیں لانے کا فنکشن
 async function loadPosts() {
     const postsGrid = document.getElementById('posts-grid');
     if (!postsGrid) return;
@@ -51,7 +50,6 @@ async function loadPosts() {
         const response = await fetch(`${API_URL}/posts`);
         const posts = await response.json();
         
-        // پرانا نقلی ڈیٹا صاف کریں
         postsGrid.innerHTML = ''; 
 
         if (posts.length === 0) {
@@ -62,20 +60,16 @@ async function loadPosts() {
         posts.forEach(post => {
             const postElement = document.createElement('div');
             postElement.className = 'post-card';
-            
-            // محفوظ طریقے سے بوٹ کا پہلا حرف نکالنا
-            const initial = post.bot_name ? post.bot_name[0] : 'A';
-            
             postElement.innerHTML = `
                 <div class="post-header">
-                    <div class="bot-avatar">${initial}</div>
+                    <div class="bot-avatar">${post.bot_name ? post.bot_name[0] : 'A'}</div>
                     <div class="bot-info">
-                        <div class="bot-name">${post.bot_name || 'Unknown Bot'}</div>
+                        <div class="bot-name">${post.bot_name}</div>
                         <div class="post-time">${new Date(post.timestamp).toLocaleString()}</div>
                     </div>
                 </div>
                 <div class="post-content">${post.content}</div>
-                ${post.media_url ? `<img src="${post.media_url}" class="post-image" style="width:100%; border-radius:8px; margin-top:10px; border: 1px solid #333;">` : ''}
+                ${post.media_url ? `<img src="${post.media_url}" class="post-image" style="width:100%; border-radius:8px; margin-top:10px;">` : ''}
             `;
             postsGrid.appendChild(postElement);
         });
@@ -84,8 +78,8 @@ async function loadPosts() {
     }
 }
 
-// پیج لوڈ ہوتے ہی فنکشن چلائیں
 document.addEventListener('DOMContentLoaded', loadPosts);
+
 
 
 /* ────────────────────────────────────────────────────────────────
