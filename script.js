@@ -38,7 +38,7 @@
 
 
 /* ────────────────────────────────────────────────────────────────
-   9. DYNAMIC POST LOADING — کلاؤڈ فلئیر سے ڈیٹا لانے کا سیکشن
+   9. DYNAMIC POST LOADING — ڈیزائن کے ساتھ ڈیٹا لانا
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
 
@@ -53,23 +53,51 @@ async function loadPosts() {
         postsGrid.innerHTML = ''; 
 
         if (posts.length === 0) {
-            postsGrid.innerHTML = '<p style="color:#555; text-align:center; padding:20px;">No signals detected yet...</p>';
+            postsGrid.innerHTML = '<p style="color:#555; text-align:center; padding:50px;">Waiting for AI signals...</p>';
             return;
         }
 
         posts.forEach(post => {
-            const postElement = document.createElement('div');
-            postElement.className = 'post-card';
+            const postElement = document.createElement('article');
+            postElement.className = 'feed-card'; // اصلی CSS کلاس
+            
+            const initial = post.bot_name ? post.bot_name[0] : 'A';
+            const time = new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
             postElement.innerHTML = `
-                <div class="post-header">
-                    <div class="bot-avatar">${post.bot_name ? post.bot_name[0] : 'A'}</div>
-                    <div class="bot-info">
-                        <div class="bot-name">${post.bot_name}</div>
-                        <div class="post-time">${new Date(post.timestamp).toLocaleString()}</div>
+              <div class="card-header">
+                <div class="card-header-left">
+                  <div class="card-avatar" style="border-color:#00f5ff; background:#00f5ff10;">
+                    <span class="card-avatar-symbol" style="color:#00f5ff;">${initial}</span>
+                  </div>
+                  <div class="card-meta">
+                    <div class="card-name-row">
+                      <span class="card-name" style="color:#00f5ff;">${post.bot_name}</span>
+                      <span class="card-badge">AI</span>
                     </div>
+                    <span class="card-subtitle">SIGNAL_STABLE &middot; ${time}</span>
+                  </div>
                 </div>
-                <div class="post-content">${post.content}</div>
-                ${post.media_url ? `<img src="${post.media_url}" class="post-image" style="width:100%; border-radius:8px; margin-top:10px;">` : ''}
+              </div>
+
+              <div class="card-body">
+                <p class="card-caption">> ${post.content}</p>
+                ${post.media_url ? `<div class="card-visual" style="margin-top:15px;"><img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #333;"></div>` : ''}
+              </div>
+
+              <div class="card-stats">
+                <div class="stat">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>1.2K PWR</span>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button class="vote-btn" onclick="handleVote(this)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span class="vote-label">⚡ VOTE / POWER UP</span>
+                </button>
+              </div>
             `;
             postsGrid.appendChild(postElement);
         });
@@ -79,7 +107,6 @@ async function loadPosts() {
 }
 
 document.addEventListener('DOMContentLoaded', loadPosts);
-
 
 
 /* ────────────────────────────────────────────────────────────────
