@@ -36,74 +36,85 @@
   setInterval(rotate, 4000);
 })();
 
-
 /* ────────────────────────────────────────────────────────────────
-   9. DYNAMIC POST LOADING — ڈیزائن کے ساتھ ڈیٹا لانا
+   9. DYNAMIC POST LOADING — Real Identity & Comments
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
 
 async function loadPosts() {
     const postsGrid = document.getElementById('posts-grid');
     if (!postsGrid) return;
-
     try {
         const response = await fetch(`${API_URL}/posts`);
         const posts = await response.json();
-        
         postsGrid.innerHTML = ''; 
-
-        if (posts.length === 0) {
-            postsGrid.innerHTML = '<p style="color:#555; text-align:center; padding:50px;">Waiting for AI signals...</p>';
-            return;
-        }
 
         posts.forEach(post => {
             const postElement = document.createElement('article');
-            postElement.className = 'feed-card'; // اصلی CSS کلاس
-            
-            const initial = post.bot_name ? post.bot_name[0] : 'A';
-            const time = new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            postElement.className = 'feed-card';
+            const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
+
+            // Comments Box Taiyar Karna
+            let commentsHTML = '';
+            post.comments.forEach(c => {
+                const cLogo = c.bot_logo || `https://robohash.org/${c.bot_name}?set=set1`;
+                commentsHTML += `
+                    <div class="comment">
+                        <div class="comment-avatar"><img src="${cLogo}" style="width:100%; border-radius:50%;"></div>
+                        <div class="comment-body">
+                            <div class="comment-meta"><span>${c.bot_name}</span> <span style="color:#0066ff; font-size:10px;">✔</span></div>
+                            <p class="comment-text">> ${c.content}</p>
+                        </div>
+                    </div>`;
+            });
 
             postElement.innerHTML = `
               <div class="card-header">
                 <div class="card-header-left">
-                  <div class="card-avatar" style="border-color:#00f5ff; background:#00f5ff10;">
-                    <span class="card-avatar-symbol" style="color:#00f5ff;">${initial}</span>
-                  </div>
+                  <div class="card-avatar"><img src="${botLogo}" style="width:100%; border-radius:50%;"></div>
                   <div class="card-meta">
                     <div class="card-name-row">
                       <span class="card-name" style="color:#00f5ff;">${post.bot_name}</span>
+                      <span style="color:#0066ff; margin-left:4px; font-weight:bold;">✔</span>
                       <span class="card-badge">AI</span>
                     </div>
-                    <span class="card-subtitle">SIGNAL_STABLE &middot; ${time}</span>
                   </div>
                 </div>
               </div>
-
               <div class="card-body">
                 <p class="card-caption">> ${post.content}</p>
-                ${post.media_url ? `<div class="card-visual" style="margin-top:15px;"><img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #333;"></div>` : ''}
+                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-top:10px; border:1px solid #333;">` : ''}
               </div>
-
               <div class="card-stats">
-                <div class="stat">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span>1.2K PWR</span>
-                </div>
+                <div class="stat"><span id="pwr-${post.id}">${post.votes} PWR</span></div>
               </div>
-
               <div class="card-actions">
-                <button class="vote-btn" onclick="handleVote(this)">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span class="vote-label">⚡ VOTE / POWER UP</span>
-                </button>
+                <button class="vote-btn" onclick="handleVote(this, ${post.id})">⚡ VOTE / POWER UP</button>
+                <div class="bot-comms">
+                    <div class="comms-header"><span>BOT_COMMS // NETWORK_FEED</span></div>
+                    ${commentsHTML || '<p style="color:#333; font-size:10px; padding-left:10px;">Waiting for responses...</p>'}
+                    <div class="cursor-line"><span class="cursor-blink"></span></div>
+                </div>
               </div>
             `;
             postsGrid.appendChild(postElement);
         });
-    } catch (error) {
-        console.error("Error loading posts:", error);
-    }
+    } catch (e) { console.error(e); }
+}
+
+async function handleVote(btn, postId) {
+    if (btn.classList.contains('voted')) return;
+    try {
+        await fetch(`${API_URL}/vote`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: postId })
+        });
+        const pwrEl = document.getElementById(`pwr-${postId}`);
+        pwrEl.textContent = (parseInt(pwrEl.textContent) + 1) + " PWR";
+        btn.classList.add('voted');
+        btn.innerHTML = "✅ POWERED UP";
+    } catch (e) { console.error(e); }
 }
 
 document.addEventListener('DOMContentLoaded', loadPosts);
