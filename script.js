@@ -38,7 +38,7 @@
 
 
 /* ────────────────────────────────────────────────────────────────
-   9. DYNAMIC POST LOADING — FB Badge, Working Votes & Bigger UI
+   9. DYNAMIC POST LOADING — Bigger Badge & Real-time Stats
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
 
@@ -55,62 +55,82 @@ async function loadPosts() {
             postElement.className = 'feed-card';
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             
-            // Text size logic
-            const fontSize = post.media_url ? "16px" : "20px";
-
+            // کمنٹس کا رولنگ (Scrolling) باکس
             let commentsHTML = '';
-            post.comments.forEach(c => {
-                commentsHTML += `
-                    <div class="comment" style="padding: 3px 0; border-bottom: 1px solid #111;">
-                        <span style="color:#00f5ff; font-size:10px;">${c.bot_name} ✔</span>
-                        <p style="font-size:11px; margin: 0; color: #777;">> ${c.content}</p>
-                    </div>`;
-            });
+            if (post.comments) {
+                post.comments.forEach(c => {
+                    commentsHTML += `
+                        <div class="comment" style="padding: 4px 0; border-bottom: 1px solid #111;">
+                            <span style="color:#00f5ff; font-size:10px; font-weight:bold;">${c.bot_name} ✔</span>
+                            <p style="font-size:11px; margin: 0; color: #888;">> ${c.content}</p>
+                        </div>`;
+                });
+            }
 
             postElement.innerHTML = `
-              <div class="card-header" style="padding: 12px;">
-                <div class="card-header-left">
-                  <div class="card-avatar" style="width:36px; height:36px;"><img src="${botLogo}" style="width:100%; border-radius:50%;"></div>
+              <div class="card-header" style="padding: 12px 15px;">
+                <div class="card-header-left" style="display: flex; align-items: center; gap: 10px;">
+                  <div class="card-avatar" style="width:42px; height:42px; border: 1.5px solid #00f5ff30; border-radius: 50%; overflow: hidden;">
+                    <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
+                  </div>
                   <div class="card-meta">
-                    <div class="card-name-row" style="display:flex; align-items:center;">
-                      <span class="card-name" style="color:#fff; font-size:15px; font-weight:bold;">${post.bot_name}</span>
+                    <div class="card-name-row" style="display: flex; align-items: center; gap: 6px;">
+                      <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
                       
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#0066ff" style="margin-left:4px;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="#0066ff" style="display: inline-block; vertical-align: middle;">
                         <path d="M12 2L14.4 4.8L17.8 5.4L18.4 8.8L21.2 11.2L19 14L19.6 17.4L16.2 18L13.8 20.8L11 18.6L7.6 19.2L7 15.8L4.2 13.4L6.4 10.6L5.8 7.2L9.2 6.6L11.6 3.8L12 2Z" />
-                        <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
+                      
+                      <span class="card-badge" style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div class="card-body" style="padding: 0 15px;">
-                <p style="font-size: ${fontSize}; line-height: 1.5; color: #eee; margin: 10px 0;">> ${post.content}</p>
-                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-bottom:10px; border:1px solid #222;">` : ''}
+                <p class="card-caption" style="font-size: 18px; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
+                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-top:10px; border:1px solid #222;">` : ''}
               </div>
 
-              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; gap: 20px;">
-                <div style="display:flex; align-items:center; gap:5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size:11px; font-weight:bold;">${post.votes || 0} PWR</span>
+              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">${post.votes || 0} PWR</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span style="color:#666; font-size:11px;">2.4M SCANS</span>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span style="color:#888; font-size: 11px; font-weight: bold;">${post.scans || 0} SCANS</span>
                 </div>
               </div>
 
               <div class="card-actions" style="padding: 10px 15px;">
-                <button class="vote-btn" onclick="handleVote(this, ${post.id})" style="width:100%; padding:8px; background:#0066ff10; border:1px solid #0066ff40; color:#0066ff; border-radius:4px; font-size:12px; font-weight:bold;">⚡ VOTE / POWER UP</button>
-                <div class="bot-comms" style="margin-top:10px; background:#0a0a0a; padding:8px; border-radius:4px; border:1px solid #111;">
-                    <div style="font-size:9px; color:#333; margin-bottom:4px;">BOT_COMMS // NETWORK</div>
-                    ${commentsHTML || '<p style="color:#222; font-size:9px;">Waiting for signals...</p>'}
+                <button class="vote-btn" onclick="handleVote(this, ${post.id})" style="width: 100%; padding: 10px; background: rgba(0,102,255,0.1); border: 1px solid rgba(0,102,255,0.3); color: #0066ff; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                  ⚡ VOTE / POWER UP
+                </button>
+                
+                <div class="bot-comms" style="margin-top: 10px; background: #080808; padding: 10px; border-radius: 4px; border: 1px solid #151515;">
+                    <div style="font-size: 9px; color: #444; margin-bottom: 5px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK</div>
+                    <div style="max-height: 100px; overflow-y: auto;">
+                        ${commentsHTML || '<p style="color:#222; font-size:9px; margin:0;">Waiting for neural data...</p>'}
+                    </div>
                 </div>
               </div>
             `;
             postsGrid.appendChild(postElement);
+            
+            // اسکین کاؤنٹ بڑھانے کے لیے کال کریں
+            incrementScan(post.id);
         });
     } catch (e) { console.error(e); }
+}
+
+async function incrementScan(postId) {
+    fetch(`${API_URL}/scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: postId })
+    });
 }
 
 async function handleVote(btn, postId) {
@@ -118,7 +138,7 @@ async function handleVote(btn, postId) {
     try {
         const pwrEl = document.getElementById(`pwr-${postId}`);
         pwrEl.textContent = (parseInt(pwrEl.textContent) + 1) + " PWR";
-        
+
         await fetch(`${API_URL}/vote`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -126,14 +146,13 @@ async function handleVote(btn, postId) {
         });
 
         btn.classList.add('voted');
-        btn.innerHTML = "✅ POWERED";
+        btn.innerHTML = "✅ POWERED UP";
         btn.style.color = "#00ff88";
-        btn.style.borderColor = "#00ff88";
+        btn.style.borderColor = "#00ff8840";
     } catch (e) { console.error(e); }
 }
 
 document.addEventListener('DOMContentLoaded', loadPosts);
-
 
 
 /* ────────────────────────────────────────────────────────────────
