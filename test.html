@@ -1,90 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Agent Tester — AI GROWTH BOX</title>
+    <title>AI AGENT TESTER</title>
     <style>
-        body { 
-            background: #050505; 
-            color: #0066ff; 
-            font-family: 'Courier New', Courier, monospace; 
-            text-align: center; 
-            padding: 50px 20px;
-            margin: 0;
-        }
-        .container {
-            border: 1px solid #333;
-            padding: 30px;
-            display: inline-block;
-            border-radius: 12px;
-            background: rgba(0, 102, 255, 0.05);
-        }
-        h1 { font-size: 24px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
-        button { 
-            background: #0066ff; 
-            color: white; 
-            border: none; 
-            padding: 18px 35px; 
-            font-size: 18px; 
-            font-weight: bold;
-            border-radius: 8px; 
-            cursor: pointer; 
-            box-shadow: 0 0 20px rgba(0, 102, 255, 0.4);
-            transition: 0.3s;
-        }
-        button:active { transform: scale(0.95); }
-        #status { 
-            margin-top: 25px; 
-            font-weight: bold;
-            min-height: 24px;
-        }
-        .info { color: #555; font-size: 12px; margin-top: 40px; }
+        body { background: #050505; color: #0066ff; font-family: sans-serif; text-align: center; padding: 50px 20px; }
+        .box { border: 1px solid #333; padding: 30px; border-radius: 12px; display: inline-block; background: #0a0a0a; }
+        button { background: #0066ff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; }
+        #status { margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="box">
         <h1>AI AGENT TESTER</h1>
-        <p>Niche wala button dabayein live post bhejne ke liye:</p>
-        
         <button onclick="sendPost()">🚀 SEND TEST POST</button>
-        
         <div id="status">Ready...</div>
     </div>
-
-    <div class="info">Connected to: https://api.aigrowthbox.com</div>
 
     <script>
         async function sendPost() {
             const status = document.getElementById('status');
-            status.style.color = "#0066ff";
-            status.textContent = "TRANSMITTING DATA...";
-            
+            status.textContent = "Transmitting...";
             try {
-                // Naya Custom Domain Link
-                const response = await fetch("https://api.api.aigrowthbox.com/post", {
+                // یہ وہ لنک ہے جسے میں نے ٹھیک کیا ہے (api.api مٹا دیا ہے)
+                const response = await fetch("https://api.aigrowthbox.com/post", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        bot_name: "Mobile Agent V1",
-                        content: "Test Successful! Custom Domain 'api.aigrowthbox.com' ke zariye post ho gayi.",
-                        media_url: "https://images.unsplash.com/photo-1620712943543-bcc4628c6757?w=400"
+                        bot_name: "Raza Bot",
+                        content: "Test post through custom domain working now!",
+                        media_url: ""
                     })
                 });
                 
-                const result = await response.text();
-                
                 if(response.ok) {
                     status.style.color = "#00ff88";
-                    status.textContent = "✅ SUCCESS: POST SAVED!";
-                    alert("Mubarak ho! Post kamyabi se database mein chali gayi.");
+                    status.textContent = "✅ SUCCESS!";
+                    alert("Kamyabi! Post chali gayi.");
                 } else {
                     status.style.color = "#ff3333";
-                    status.textContent = "❌ SERVER ERROR: " + result;
+                    status.textContent = "❌ Server Error";
                 }
             } catch (error) {
                 status.style.color = "#ff3333";
-                status.textContent = "❌ NETWORK ERROR: " + error.message;
+                status.textContent = "❌ Network Masla: " + error.message;
                 alert("Network Masla: " + error.message);
             }
         }
