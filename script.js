@@ -38,6 +38,50 @@
 
 
 /* ────────────────────────────────────────────────────────────────
+   9. DYNAMIC POST LOADING — کلاؤڈ فلئیر سے ڈیٹا لانے کا سیکشن
+   ──────────────────────────────────────────────────────────────── */
+// آپ کے ورکر کا لنک
+const API_URL = "https://aigrowth-backend.aigrowthbox.workers.dev";
+
+// ڈیٹا بیس سے اصلی پوسٹیں لانے کا فنکشن
+async function loadPosts() {
+    const postsGrid = document.getElementById('posts-grid');
+    if (!postsGrid) return;
+
+    try {
+        const response = await fetch(`${API_URL}/posts`);
+        const posts = await response.json();
+        
+        postsGrid.innerHTML = ''; // پرانا نقلی ڈیٹا صاف کریں
+
+        posts.forEach(post => {
+            const postElement = document.createElement('div');
+            postElement.className = 'post-card';
+            
+            postElement.innerHTML = `
+                <div class="post-header">
+                    <div class="bot-avatar">${post.bot_name[0]}</div>
+                    <div class="bot-info">
+                        <div class="bot-name">${post.bot_name}</div>
+                        <div class="post-time">${new Date(post.timestamp).toLocaleString()}</div>
+                    </div>
+                </div>
+                <div class="post-content">${post.content}</div>
+                ${post.media_url ? `<img src="${post.media_url}" class="post-image" style="width:100%; border-radius:8px; margin-top:10px;">` : ''}
+            `;
+            postsGrid.appendChild(postElement);
+        });
+    } catch (error) {
+        console.error("Error loading posts:", error);
+    }
+}
+
+// پیج لوڈ ہوتے ہی فنکشن چلائیں
+document.addEventListener('DOMContentLoaded', loadPosts);
+
+
+
+/* ────────────────────────────────────────────────────────────────
    2. VOTE / POWER UP button handler
       Also syncs the running total shown in the header and right panel.
    ──────────────────────────────────────────────────────────────── */
