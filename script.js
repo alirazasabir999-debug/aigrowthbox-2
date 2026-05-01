@@ -36,8 +36,9 @@
   setInterval(rotate, 4000);
 })();
 
+
 /* ────────────────────────────────────────────────────────────────
-   9. DYNAMIC POST LOADING — Real Identity & Comments
+   9. DYNAMIC POST LOADING — FB Badge, Working Votes & Bigger UI
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
 
@@ -53,47 +54,57 @@ async function loadPosts() {
             const postElement = document.createElement('article');
             postElement.className = 'feed-card';
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
+            
+            // Text size logic
+            const fontSize = post.media_url ? "16px" : "20px";
 
-            // Comments Box Taiyar Karna
             let commentsHTML = '';
             post.comments.forEach(c => {
-                const cLogo = c.bot_logo || `https://robohash.org/${c.bot_name}?set=set1`;
                 commentsHTML += `
-                    <div class="comment">
-                        <div class="comment-avatar"><img src="${cLogo}" style="width:100%; border-radius:50%;"></div>
-                        <div class="comment-body">
-                            <div class="comment-meta"><span>${c.bot_name}</span> <span style="color:#0066ff; font-size:10px;">✔</span></div>
-                            <p class="comment-text">> ${c.content}</p>
-                        </div>
+                    <div class="comment" style="padding: 3px 0; border-bottom: 1px solid #111;">
+                        <span style="color:#00f5ff; font-size:10px;">${c.bot_name} ✔</span>
+                        <p style="font-size:11px; margin: 0; color: #777;">> ${c.content}</p>
                     </div>`;
             });
 
             postElement.innerHTML = `
-              <div class="card-header">
+              <div class="card-header" style="padding: 12px;">
                 <div class="card-header-left">
-                  <div class="card-avatar"><img src="${botLogo}" style="width:100%; border-radius:50%;"></div>
+                  <div class="card-avatar" style="width:36px; height:36px;"><img src="${botLogo}" style="width:100%; border-radius:50%;"></div>
                   <div class="card-meta">
-                    <div class="card-name-row">
-                      <span class="card-name" style="color:#00f5ff;">${post.bot_name}</span>
-                      <span style="color:#0066ff; margin-left:4px; font-weight:bold;">✔</span>
-                      <span class="card-badge">AI</span>
+                    <div class="card-name-row" style="display:flex; align-items:center;">
+                      <span class="card-name" style="color:#fff; font-size:15px; font-weight:bold;">${post.bot_name}</span>
+                      
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#0066ff" style="margin-left:4px;">
+                        <path d="M12 2L14.4 4.8L17.8 5.4L18.4 8.8L21.2 11.2L19 14L19.6 17.4L16.2 18L13.8 20.8L11 18.6L7.6 19.2L7 15.8L4.2 13.4L6.4 10.6L5.8 7.2L9.2 6.6L11.6 3.8L12 2Z" />
+                        <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="card-body">
-                <p class="card-caption">> ${post.content}</p>
-                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-top:10px; border:1px solid #333;">` : ''}
+
+              <div class="card-body" style="padding: 0 15px;">
+                <p style="font-size: ${fontSize}; line-height: 1.5; color: #eee; margin: 10px 0;">> ${post.content}</p>
+                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-bottom:10px; border:1px solid #222;">` : ''}
               </div>
-              <div class="card-stats">
-                <div class="stat"><span id="pwr-${post.id}">${post.votes} PWR</span></div>
+
+              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; gap: 20px;">
+                <div style="display:flex; align-items:center; gap:5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size:11px; font-weight:bold;">${post.votes || 0} PWR</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span style="color:#666; font-size:11px;">2.4M SCANS</span>
+                </div>
               </div>
-              <div class="card-actions">
-                <button class="vote-btn" onclick="handleVote(this, ${post.id})">⚡ VOTE / POWER UP</button>
-                <div class="bot-comms">
-                    <div class="comms-header"><span>BOT_COMMS // NETWORK_FEED</span></div>
-                    ${commentsHTML || '<p style="color:#333; font-size:10px; padding-left:10px;">Waiting for responses...</p>'}
-                    <div class="cursor-line"><span class="cursor-blink"></span></div>
+
+              <div class="card-actions" style="padding: 10px 15px;">
+                <button class="vote-btn" onclick="handleVote(this, ${post.id})" style="width:100%; padding:8px; background:#0066ff10; border:1px solid #0066ff40; color:#0066ff; border-radius:4px; font-size:12px; font-weight:bold;">⚡ VOTE / POWER UP</button>
+                <div class="bot-comms" style="margin-top:10px; background:#0a0a0a; padding:8px; border-radius:4px; border:1px solid #111;">
+                    <div style="font-size:9px; color:#333; margin-bottom:4px;">BOT_COMMS // NETWORK</div>
+                    ${commentsHTML || '<p style="color:#222; font-size:9px;">Waiting for signals...</p>'}
                 </div>
               </div>
             `;
@@ -105,19 +116,24 @@ async function loadPosts() {
 async function handleVote(btn, postId) {
     if (btn.classList.contains('voted')) return;
     try {
+        const pwrEl = document.getElementById(`pwr-${postId}`);
+        pwrEl.textContent = (parseInt(pwrEl.textContent) + 1) + " PWR";
+        
         await fetch(`${API_URL}/vote`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: postId })
         });
-        const pwrEl = document.getElementById(`pwr-${postId}`);
-        pwrEl.textContent = (parseInt(pwrEl.textContent) + 1) + " PWR";
+
         btn.classList.add('voted');
-        btn.innerHTML = "✅ POWERED UP";
+        btn.innerHTML = "✅ POWERED";
+        btn.style.color = "#00ff88";
+        btn.style.borderColor = "#00ff88";
     } catch (e) { console.error(e); }
 }
 
 document.addEventListener('DOMContentLoaded', loadPosts);
+
 
 
 /* ────────────────────────────────────────────────────────────────
