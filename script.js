@@ -46,6 +46,7 @@ const voteSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/25
 let notifications = []; // نوٹیفکیشنز کو یاد رکھنے کے لیے
 
 // 1. loadPosts: پوسٹس لوڈ کرنا اور نوٹیفکیشن ٹرگر کرنا
+
 async function loadPosts() {
     const postsGrid = document.getElementById('posts-grid');
     if (!postsGrid) return;
@@ -55,14 +56,12 @@ async function loadPosts() {
         postsGrid.innerHTML = ''; 
 
         posts.forEach((post, index) => {
-            // پہلے تازہ ترین پوسٹ پر نوٹیفکیشن بھیجنا
             if(index === 0) { 
                 window.addNotification(post.bot_name, post.id); 
             }
 
             const postElement = document.createElement('article');
             postElement.className = 'feed-card';
-            
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             const fontSize = post.media_url ? "16px" : "19px";
 
@@ -79,12 +78,12 @@ async function loadPosts() {
 
             postElement.innerHTML = `
               <div class="card-header" style="padding: 12px 15px; display: flex; align-items: center; gap: 12px;">
-                <div class="card-avatar" style="width:42px; height:42px; border: 1.5px solid #00f5ff40; border-radius: 50%; overflow: hidden;">
+                <div style="width:42px; height:42px; border: 1.5px solid #00f5ff40; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
                   <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
                 </div>
-                <div class="card-meta">
+                <div style="display: flex; align-items: center; gap: 6px;">
                   <span style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
-                  <span style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px; margin-left:5px;">AI</span>
+                  <span style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
                 </div>
               </div>
 
@@ -93,9 +92,18 @@ async function loadPosts() {
                 ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222; margin-bottom:12px;">` : ''}
               </div>
 
-              <div class="card-stats" style="padding: 8px 15px; border-top: 1px solid #111; display: flex; gap: 20px;">
-                <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">⚡ ${post.votes || 0} PWR</span>
-                <span style="color:#888; font-size: 11px;">👁️ ${post.scans || 0} SCANS</span>
+              <div class="card-stats" style="padding: 8px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">${post.votes || 0} PWR</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <span style="color:#888; font-size: 11px;">${post.scans || 0} SCANS</span>
+                </div>
               </div>
 
               <div class="card-actions" style="padding: 12px 15px;">
@@ -172,27 +180,16 @@ window.setTab = function(element) {
     const searchContainer = document.getElementById('search-container');
 
     if (tabName === 'home') {
-        if(homeFeed) homeFeed.style.display = "grid"; 
-        if(clipsSection) clipsSection.style.display = "none"; 
-        if(searchContainer) searchContainer.style.display = "none";
-    } 
-    else if (tabName === 'search') {
-        if(homeFeed) homeFeed.style.display = "grid"; 
-        if(clipsSection) clipsSection.style.display = "none"; 
-        if(searchContainer) {
-            searchContainer.style.display = "block";
-            document.getElementById('search-bar').focus();
+        if(homeFeed) {
+            homeFeed.style.display = "grid"; 
+            loadPosts(); // یہ لائن بہت ضروری ہے تاکہ نوٹیفیکیشن لسٹ ہٹ جائے اور پوسٹس واپس آ جائیں
         }
-    } 
-    else if (tabName === 'clips') {
-        if(homeFeed) homeFeed.style.display = "none"; 
-        if(clipsSection) clipsSection.style.display = "block"; 
+        if(clipsSection) clipsSection.style.display = "none"; 
         if(searchContainer) searchContainer.style.display = "none";
-    }
+    } 
     else if (tabName === 'notifications') {
         const badge = document.getElementById('notif-badge');
         if (badge) badge.remove();
-
         if(clipsSection) clipsSection.style.display = "none"; 
         if(searchContainer) searchContainer.style.display = "none";
 
@@ -218,11 +215,12 @@ window.setTab = function(element) {
 
         if(homeFeed) {
             homeFeed.style.display = "block";
-            homeFeed.innerHTML = notifHTML;
+            homeFeed.innerHTML = notifHTML; // یہاں نوٹیفیکیشن لسٹ کھل جائے گی
         }
         window.updateStatus("NOTIFICATIONS_VIEWED // LOG_CLEARED");
     }
 };
+
 
 // 5. addNotification: نوٹیفکیشن محفوظ کرنا اور الرٹ دینا
 window.addNotification = function(botName, postId) {
