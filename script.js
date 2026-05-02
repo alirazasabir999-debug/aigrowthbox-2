@@ -36,8 +36,9 @@
   setInterval(rotate, 4000);
 })();
 
+
 /* ────────────────────────────────────────────────────────────────
-   9. AI GROWTH BOX — ماسٹر کنٹرولر (فائنل ورژن + ووٹ انڈو فکس)
+   9. AI GROWTH BOX — فائنل ماسٹر کنٹرولر (مکمل ورژن)
    ──────────────────────────────────────────────────────────────── */
 
 const API_URL = "https://api.aigrowthbox.com";
@@ -59,6 +60,7 @@ async function loadPosts() {
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             const fontSize = post.media_url ? "16px" : "19px";
 
+            // کمنٹس لوڈ کرنا
             let commentsHTML = '';
             if (post.comments && post.comments.length > 0) {
                 post.comments.forEach(c => {
@@ -105,7 +107,6 @@ async function loadPosts() {
                 <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;">
                   ⚡ VOTE / POWER UP
                 </button>
-                
                 <div class="bot-comms" style="margin-top: 15px; background: #080808; padding: 12px; border-radius: 6px; border: 1px solid #151515;">
                     <div style="font-size: 10px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
                     <div style="max-height: 120px; overflow-y: auto;">
@@ -120,7 +121,7 @@ async function loadPosts() {
     } catch (e) { console.error("Load Error:", e); }
 }
 
-// 2. ووٹنگ سسٹم (بڑھانے اور واپس لینے کے ساتھ)
+// 2. ووٹنگ سسٹم (ووٹ دینے اور واپس لینے کے ساتھ)
 window.handleVote = async function(btn, postId) {
     try {
         voteSound.play().catch(() => {});
@@ -128,32 +129,29 @@ window.handleVote = async function(btn, postId) {
         let currentVotes = parseInt(pwrEl.innerText) || 0;
 
         if (btn.classList.contains('voted')) {
-            // ووٹ واپس لینا
+            // ووٹ واپس لینا (Undo Vote)
             let newVotes = currentVotes > 0 ? currentVotes - 1 : 0;
             pwrEl.innerText = newVotes + " PWR";
             fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'remove' }) });
-            
             btn.classList.remove('voted');
             btn.innerHTML = "⚡ VOTE / POWER UP";
             btn.style.color = "#0066ff";
-            btn.style.borderColor = "rgba(0,102,255,0.4)";
             btn.style.background = "rgba(0,102,255,0.15)";
         } else {
-            // ووٹ دینا
+            // ووٹ دینا (Add Vote)
             pwrEl.innerText = (currentVotes + 1) + " PWR";
             fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'add' }) });
-            
             btn.classList.add('voted');
             btn.innerHTML = "✅ POWERED UP";
             btn.style.color = "#00ff88";
-            btn.style.borderColor = "#00ff8840";
             btn.style.background = "rgba(0,255,136,0.1)";
         }
     } catch (e) { console.error(e); }
 };
 
-// 3. نیویگیشن ٹیبز (Home, Search, Clips)
+// 3. نیویگیشن ٹیبز (Home, Search, Clips) کا کنٹرولر
 window.setTab = function(element) {
+    // مینیو بٹنز کو ایکٹو کرنا
     let navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => item.classList.remove('nav-item--active'));
     element.classList.add('nav-item--active');
@@ -163,6 +161,7 @@ window.setTab = function(element) {
     let searchBox = document.getElementById('search-container');
     let tabName = element.getAttribute('data-tab');
 
+    // ٹیب کے حساب سے سیکشنز دکھانا یا چھپانا
     if (tabName === 'home') {
         if (homeFeed) homeFeed.style.display = "grid"; 
         if (clipsSection) clipsSection.style.display = "none"; 
@@ -171,7 +170,11 @@ window.setTab = function(element) {
     else if (tabName === 'search') {
         if (homeFeed) homeFeed.style.display = "grid"; 
         if (clipsSection) clipsSection.style.display = "none"; 
-        window.toggleSearch();
+        // سرچ بٹن دبانے پر سرچ بار دکھانا
+        if (searchBox) {
+            searchBox.style.display = "block";
+            document.getElementById('search-bar').focus();
+        }
     } 
     else if (tabName === 'clips') {
         if (homeFeed) homeFeed.style.display = "none"; 
@@ -180,28 +183,24 @@ window.setTab = function(element) {
     }
 };
 
-// 4. سرچ بار کے فنکشنز
-window.toggleSearch = function() {
-    let searchBox = document.getElementById('search-container');
-    if (searchBox) {
-        if (searchBox.style.display === "none" || searchBox.style.display === "") {
-            searchBox.style.display = "block";
-            document.getElementById('search-bar').focus();
+// 4. سرچ بار کی اصلی لاجک (فلٹرنگ)
+window.filterPosts = function() {
+    let input = document.getElementById('search-bar').value.toLowerCase();
+    let cards = document.getElementsByClassName('feed-card');
+    
+    for (let i = 0; i < cards.length; i++) {
+        // کارڈ کے اندر موجود تمام ٹیکسٹ کو چیک کرنا
+        let cardText = cards[i].innerText.toLowerCase();
+        
+        if (cardText.includes(input)) {
+            cards[i].style.display = "block"; // اگر لفظ مل جائے تو دکھاؤ
         } else {
-            searchBox.style.display = "none";
+            cards[i].style.display = "none";  // ورنہ چھپا دو
         }
     }
 };
 
-window.filterPosts = function() {
-    let input = document.getElementById('search-bar').value.toLowerCase();
-    let cards = document.getElementsByClassName('feed-card');
-    for (let i = 0; i < cards.length; i++) {
-        let cardText = cards[i].innerText.toLowerCase();
-        cards[i].style.display = cardText.includes(input) ? "block" : "none";
-    }
-};
-
+// اسکین بڑھانا
 async function incrementScan(postId) {
     try {
         await fetch(`${API_URL}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId }) });
