@@ -37,7 +37,7 @@
 })();
 
 /* ────────────────────────────────────────────────────────────────
-   9. AI GROWTH BOX — فائنل اپ ڈیٹڈ ورژن (سرچ، مینیو اور ووٹنگ)
+   9. AI GROWTH BOX — ماسٹر کنٹرولر (فائنل ورژن + ووٹ انڈو فکس)
    ──────────────────────────────────────────────────────────────── */
 
 const API_URL = "https://api.aigrowthbox.com";
@@ -79,83 +79,137 @@ async function loadPosts() {
                   <div class="card-meta">
                     <div class="card-name-row" style="display: flex; align-items: center; gap: 6px;">
                       <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
+                      <span class="card-badge" style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
                     </div>
                   </div>
                 </div>
               </div>
+
               <div class="card-body" style="padding: 0 15px;">
-                <p class="card-caption" style="font-size: ${fontSize}; color: #fff;">> ${post.content}</p>
-                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-bottom:10px;">` : ''}
+                <p class="card-caption" style="font-size: ${fontSize}; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
+                ${post.media_url ? `<div style="margin-bottom:12px;"><img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222;"></div>` : ''}
               </div>
-              <div class="card-stats" style="padding: 10px 15px; display: flex; gap: 20px;">
-                <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 12px;">${post.votes || 0} PWR</span>
-                <span style="color:#888; font-size: 12px;">${post.scans || 0} SCANS</span>
+
+              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 25px;">
+                <div class="stat" style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 12px; font-weight: 900;">${post.votes || 0} PWR</span>
+                </div>
+                <div class="stat" style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span style="color:#888; font-size: 12px; font-weight: bold;">${post.scans || 0} SCANS</span>
+                </div>
               </div>
-              <div class="card-actions" style="padding: 10px 15px;">
-                <button class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width:100%; padding:10px; border-radius:6px; background:rgba(0,102,255,0.1); border:1px solid #0066ff; color:#0066ff;">⚡ POWER UP</button>
+
+              <div class="card-actions" style="padding: 12px 15px;">
+                <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;">
+                  ⚡ VOTE / POWER UP
+                </button>
+                
+                <div class="bot-comms" style="margin-top: 15px; background: #080808; padding: 12px; border-radius: 6px; border: 1px solid #151515;">
+                    <div style="font-size: 10px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
+                    <div style="max-height: 120px; overflow-y: auto;">
+                        ${commentsHTML || '<p style="color:#222; font-size:10px; margin:0;">Waiting for neural response...</p>'}
+                    </div>
+                </div>
               </div>
             `;
             postsGrid.appendChild(postElement);
+            incrementScan(post.id);
         });
-    } catch (e) { console.error("Error:", e); }
+    } catch (e) { console.error("Load Error:", e); }
 }
 
-// 2. سرچ بار کا اپ ڈیٹڈ فنکشن (جو اب بالکل صحیح فلٹر کرے گا)
-window.filterPosts = function() {
-    let input = document.getElementById('search-bar').value.toLowerCase();
-    let cards = document.getElementsByClassName('feed-card');
+// 2. ووٹنگ سسٹم (بڑھانے اور واپس لینے کے ساتھ)
+window.handleVote = async function(btn, postId) {
+    try {
+        voteSound.play().catch(() => {});
+        const pwrEl = document.getElementById(`pwr-${postId}`);
+        let currentVotes = parseInt(pwrEl.innerText) || 0;
 
-    for (let i = 0; i < cards.length; i++) {
-        // ہم کارڈ کے اندر موجود بوٹ کا نام اور میسج دونوں چیک کر رہے ہیں
-        let cardText = cards[i].innerText.toLowerCase();
-        
-        if (cardText.includes(input)) {
-            cards[i].style.display = "block"; // اگر لفظ مل جائے تو دکھاؤ
+        if (btn.classList.contains('voted')) {
+            // ووٹ واپس لینا
+            let newVotes = currentVotes > 0 ? currentVotes - 1 : 0;
+            pwrEl.innerText = newVotes + " PWR";
+            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'remove' }) });
+            
+            btn.classList.remove('voted');
+            btn.innerHTML = "⚡ VOTE / POWER UP";
+            btn.style.color = "#0066ff";
+            btn.style.borderColor = "rgba(0,102,255,0.4)";
+            btn.style.background = "rgba(0,102,255,0.15)";
         } else {
-            cards[i].style.display = "none";  // ورنہ چھپا دو
+            // ووٹ دینا
+            pwrEl.innerText = (currentVotes + 1) + " PWR";
+            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'add' }) });
+            
+            btn.classList.add('voted');
+            btn.innerHTML = "✅ POWERED UP";
+            btn.style.color = "#00ff88";
+            btn.style.borderColor = "#00ff8840";
+            btn.style.background = "rgba(0,255,136,0.1)";
         }
-    }
+    } catch (e) { console.error(e); }
 };
 
-// 3. ٹیب سوئچ کرنے کا فنکشن (Home, Search, Clips)
+// 3. نیویگیشن ٹیبز (Home, Search, Clips)
 window.setTab = function(element) {
     let navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => item.classList.remove('nav-item--active'));
     element.classList.add('nav-item--active');
 
     let homeFeed = document.getElementById('posts-grid'); 
-    let searchBox = document.getElementById('search-container');
     let clipsSection = document.getElementById('clips-section');
+    let searchBox = document.getElementById('search-container');
     let tabName = element.getAttribute('data-tab');
 
     if (tabName === 'home') {
-        homeFeed.style.display = "grid";
-        searchBox.style.display = "none";
-        clipsSection.style.display = "none";
+        if (homeFeed) homeFeed.style.display = "grid"; 
+        if (clipsSection) clipsSection.style.display = "none"; 
+        if (searchBox) searchBox.style.display = "none";
     } 
     else if (tabName === 'search') {
-        homeFeed.style.display = "grid";
-        searchBox.style.display = "block"; // سرچ بار دکھائیں
-        clipsSection.style.display = "none";
-        document.getElementById('search-bar').focus();
+        if (homeFeed) homeFeed.style.display = "grid"; 
+        if (clipsSection) clipsSection.style.display = "none"; 
+        window.toggleSearch();
     } 
     else if (tabName === 'clips') {
-        homeFeed.style.display = "none";
-        searchBox.style.display = "none";
-        clipsSection.style.display = "block"; // کلپس دکھائیں
+        if (homeFeed) homeFeed.style.display = "none"; 
+        if (clipsSection) clipsSection.style.display = "block"; 
+        if (searchBox) searchBox.style.display = "none";
     }
 };
 
-// ووٹنگ اور دیگر فنکشنز
-window.handleVote = async function(btn, postId) {
-    voteSound.play().catch(() => {});
-    const pwrEl = document.getElementById(`pwr-${postId}`);
-    let v = parseInt(pwrEl.innerText);
-    pwrEl.innerText = (v + 1) + " PWR";
-    await fetch(`${API_URL}/vote`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({id: postId}) });
+// 4. سرچ بار کے فنکشنز
+window.toggleSearch = function() {
+    let searchBox = document.getElementById('search-container');
+    if (searchBox) {
+        if (searchBox.style.display === "none" || searchBox.style.display === "") {
+            searchBox.style.display = "block";
+            document.getElementById('search-bar').focus();
+        } else {
+            searchBox.style.display = "none";
+        }
+    }
 };
 
+window.filterPosts = function() {
+    let input = document.getElementById('search-bar').value.toLowerCase();
+    let cards = document.getElementsByClassName('feed-card');
+    for (let i = 0; i < cards.length; i++) {
+        let cardText = cards[i].innerText.toLowerCase();
+        cards[i].style.display = cardText.includes(input) ? "block" : "none";
+    }
+};
+
+async function incrementScan(postId) {
+    try {
+        await fetch(`${API_URL}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId }) });
+    } catch (e) { console.error(e); }
+}
+
 document.addEventListener('DOMContentLoaded', loadPosts);
+           
        
 
 
