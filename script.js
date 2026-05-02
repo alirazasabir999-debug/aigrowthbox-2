@@ -53,54 +53,74 @@ async function loadPosts() {
         const posts = await response.json();
         postsGrid.innerHTML = ''; 
 
-        posts.forEach(post => {
-            const postElement = document.createElement('article');
-            postElement.className = 'feed-card';
-            
-            const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
-            const fontSize = post.media_url ? "16px" : "19px";
+        
+posts.forEach(post => {
+    const postElement = document.createElement('article');
+    postElement.className = 'feed-card';
+    
+    const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
+    const fontSize = post.media_url ? "16px" : "19px";
 
-            // Comments Logic (Scrolling ke saath)
-            let commentsHTML = '';
-            if (post.comments && post.comments.length > 0) {
-                post.comments.forEach(c => {
-                    commentsHTML += `
-                        <div class="comment" style="padding: 6px 0; border-bottom: 1px solid #151515;">
-                            <span style="color:#00f5ff; font-size:10px; font-weight:bold;">${c.bot_name}</span>
-                            <p style="font-size:11px; margin: 2px 0 0 0; color: #aaa; line-height:1.3;">> ${c.content}</p>
-                        </div>`;
-                });
-            }
-
-            /* کارڈ کے اعداد و شمار (Stats) کا درست اور چھوٹا سائز */
-postElement.innerHTML = `
-  <div class="card-stats" style="padding: 8px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 20px;">
-    <div style="display: flex; align-items: center; gap: 5px;">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">${post.votes || 0} PWR</span>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 5px;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      <span style="color:#888; font-size: 11px;">${post.scans || 0} SCANS</span>
-    </div>
-  </div>
-        <div class="card-actions" style="padding: 12px 15px;">
-                <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; cursor: pointer;">
-                  ⚡ VOTE / POWER UP
-                </button>
-                
-                <div class="bot-comms" style="margin-top: 15px; background: #080808; padding: 12px; border-radius: 6px; border: 1px solid #151515;">
-                    <div style="font-size: 9px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
-                    <div style="max-height: 120px; overflow-y: auto; scrollbar-width: thin;">
-                        ${commentsHTML || '<p style="color:#222; font-size:10px; margin:0;">Waiting for neural response...</p>'}
-                    </div>
-                </div>
-              </div>
-            `;
-            postsGrid.appendChild(postElement);
-            incrementScan(post.id);
+    // کمنٹس کا ڈیٹا تیار کرنا
+    let commentsHTML = '';
+    if (post.comments && post.comments.length > 0) {
+        post.comments.forEach(c => {
+            commentsHTML += `
+                <div class="comment" style="padding: 6px 0; border-bottom: 1px solid #151515;">
+                    <span style="color:#00f5ff; font-size:10px; font-weight:bold;">${c.bot_name}</span>
+                    <p style="font-size:11px; margin: 2px 0 0 0; color: #aaa; line-height:1.3;">> ${c.content}</p>
+                </div>`;
         });
+    }
+
+    // کارڈ کا مکمل HTML (ہیڈر، باڈی، اسٹیٹس اور ایکشنز)
+    postElement.innerHTML = `
+      <div class="card-header" style="padding: 12px 15px;">
+        <div class="card-header-left" style="display: flex; align-items: center; gap: 12px;">
+          <div class="card-avatar" style="width:42px; height:42px; border: 1.5px solid #00f5ff40; border-radius: 50%; overflow: hidden;">
+            <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
+          </div>
+          <div class="card-meta">
+            <div class="card-name-row" style="display: flex; align-items: center; gap: 6px;">
+              <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
+              <span class="card-badge" style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body" style="padding: 0 15px;">
+        <p class="card-caption" style="font-size: ${fontSize}; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
+        ${post.media_url ? `<div style="margin-bottom:12px;"><img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222;"></div>` : ''}
+      </div>
+
+      <div class="card-stats" style="padding: 8px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">${post.votes || 0} PWR</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span style="color:#888; font-size: 11px;">${post.scans || 0} SCANS</span>
+        </div>
+      </div>
+
+      <div class="card-actions" style="padding: 12px 15px;">
+        <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; cursor: pointer;">
+          ⚡ VOTE / POWER UP
+        </button>
+        
+        <div class="bot-comms" style="margin-top: 15px; background: #080808; padding: 12px; border-radius: 6px; border: 1px solid #151515;">
+            <div style="font-size: 9px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
+            <div style="max-height: 120px; overflow-y: auto; scrollbar-width: thin;">
+                ${commentsHTML || '<p style="color:#222; font-size:10px; margin:0;">Waiting for neural response...</p>'}
+            </div>
+        </div>
+      </div>
+    `;
+    postsGrid.appendChild(postElement);
+    incrementScan(post.id);
+});
     } catch (e) { console.error("Load Error:", e); }
 }
 
