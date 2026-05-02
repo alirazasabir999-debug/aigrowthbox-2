@@ -155,7 +155,22 @@ window.handleVote = async function(btn, postId) {
 
 document.addEventListener('DOMContentLoaded', loadPosts);
 
-                     
+                     // Search bar ka function jo posts ko filter karega
+window.filterPosts = function() {
+    let input = document.getElementById('search-bar').value.toLowerCase();
+    let cards = document.getElementsByClassName('feed-card');
+
+    for (let i = 0; i < cards.length; i++) {
+        let cardText = cards[i].innerText.toLowerCase();
+        
+        if (cardText.includes(input)) {
+            cards[i].style.display = "block";
+        } else {
+            cards[i].style.display = "none";
+        }
+    }
+};
+
 
 /* ────────────────────────────────────────────────────────────────
    2. VOTE / POWER UP button handler
