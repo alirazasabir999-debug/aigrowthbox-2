@@ -36,14 +36,13 @@
   setInterval(rotate, 4000);
 })();
 
-
 /* ────────────────────────────────────────────────────────────────
    9. DYNAMIC POST LOADING — فائنل ورژن (آواز اور ٹوگل ووٹ کے ساتھ)
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
 
-// کلک کی آواز سیٹ کرنا
-const voteSound = new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
+// ووٹ کی آواز کا لنک
+const voteSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 
 async function loadPosts() {
     const postsGrid = document.getElementById('posts-grid');
@@ -60,7 +59,6 @@ async function loadPosts() {
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             const fontSize = post.media_url ? "16px" : "19px";
 
-            // کمنٹس لوڈ کرنا
             let commentsHTML = '';
             if (post.comments && post.comments.length > 0) {
                 post.comments.forEach(c => {
@@ -104,7 +102,7 @@ async function loadPosts() {
               </div>
 
               <div class="card-actions" style="padding: 12px 15px;">
-                <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.3s;">
+                <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;">
                   ⚡ VOTE / POWER UP
                 </button>
                 
@@ -117,8 +115,6 @@ async function loadPosts() {
               </div>
             `;
             postsGrid.appendChild(postElement);
-            
-            // پوسٹ لوڈ ہوتے ہی ویو (Scan) کی گنتی بڑھائیں
             incrementScan(post.id);
         });
     } catch (e) { console.error("Load Error:", e); }
@@ -126,63 +122,38 @@ async function loadPosts() {
 
 async function incrementScan(postId) {
     try {
-        await fetch(`${API_URL}/scan`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: postId })
-        });
-    } catch (e) { console.error("Scan error:", e); }
+        await fetch(`${API_URL}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId }) });
+    } catch (e) { console.error(e); }
 }
 
-// ووٹ کرنے اور واپس لینے کا مکمل فنکشن
 window.handleVote = async function(btn, postId) {
     try {
-        // کلک کی آواز چلائیں
         voteSound.play().catch(e => console.log("Sound error:", e));
-
         const pwrEl = document.getElementById(`pwr-${postId}`);
         let currentVotes = parseInt(pwrEl.innerText) || 0;
 
         if (btn.classList.contains('voted')) {
-            // ووٹ واپس لینا (Undo)
             let newVotes = currentVotes > 0 ? currentVotes - 1 : 0;
             pwrEl.innerText = newVotes + " PWR";
-            
-            fetch(`${API_URL}/vote`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: postId, action: 'remove' })
-            });
-
+            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'remove' }) });
             btn.classList.remove('voted');
             btn.innerHTML = "⚡ VOTE / POWER UP";
             btn.style.color = "#0066ff";
             btn.style.borderColor = "rgba(0,102,255,0.4)";
             btn.style.background = "rgba(0,102,255,0.15)";
-
         } else {
-            // نیا ووٹ دینا (Add)
             pwrEl.innerText = (currentVotes + 1) + " PWR";
-
-            fetch(`${API_URL}/vote`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: postId, action: 'add' })
-            });
-
+            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'add' }) });
             btn.classList.add('voted');
             btn.innerHTML = "✅ POWERED UP";
             btn.style.color = "#00ff88";
             btn.style.borderColor = "#00ff8840";
             btn.style.background = "rgba(0,255,136,0.1)";
         }
-    } catch (e) { 
-        console.error("Vote error:", e); 
-    }
+    } catch (e) { console.error(e); }
 };
 
 document.addEventListener('DOMContentLoaded', loadPosts);
-
 
                      
 
