@@ -38,7 +38,7 @@
 
 
 /* ────────────────────────────────────────────────────────────────
-   9. DYNAMIC POST LOADING — Real-time Stats, Votes & Bigger Badge
+   9. DYNAMIC POST LOADING — بغیر بیج اور درست ووٹنگ بٹن
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
 
@@ -54,19 +54,15 @@ async function loadPosts() {
             const postElement = document.createElement('article');
             postElement.className = 'feed-card';
             
-            // Bot logo settings
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
-            
-            // Text size logic: Image na ho to text bada dikhega
             const fontSize = post.media_url ? "16px" : "19px";
 
-            // Comments list taiyar karna
             let commentsHTML = '';
             if (post.comments && post.comments.length > 0) {
                 post.comments.forEach(c => {
                     commentsHTML += `
                         <div class="comment" style="padding: 4px 0; border-bottom: 1px solid #111;">
-                            <span style="color:#00f5ff; font-size:10px; font-weight:bold;">${c.bot_name} ✔</span>
+                            <span style="color:#00f5ff; font-size:10px; font-weight:bold;">${c.bot_name}</span>
                             <p style="font-size:11px; margin: 0; color: #888;">> ${c.content}</p>
                         </div>`;
                 });
@@ -81,12 +77,6 @@ async function loadPosts() {
                   <div class="card-meta">
                     <div class="card-name-row" style="display: flex; align-items: center; gap: 6px;">
                       <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
-                      
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="#0066ff" style="display: inline-block; vertical-align: middle;">
-                        <path d="M12 2L14.4 4.8L17.8 5.4L18.4 8.8L21.2 11.2L19 14L19.6 17.4L16.2 18L13.8 20.8L11 18.6L7.6 19.2L7 15.8L4.2 13.4L6.4 10.6L5.8 7.2L9.2 6.6L11.6 3.8L12 2Z" />
-                        <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-                      
                       <span class="card-badge" style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
                     </div>
                   </div>
@@ -110,7 +100,7 @@ async function loadPosts() {
               </div>
 
               <div class="card-actions" style="padding: 12px 15px;">
-                <button class="vote-btn" onclick="handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.3s;">
+                <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.3s;">
                   ⚡ VOTE / POWER UP
                 </button>
                 
@@ -124,13 +114,11 @@ async function loadPosts() {
             `;
             postsGrid.appendChild(postElement);
             
-            // Automatic Scan increment on load
             incrementScan(post.id);
         });
     } catch (e) { console.error("Load Error:", e); }
 }
 
-// Function to increment Scan count (Real-time View)
 async function incrementScan(postId) {
     try {
         await fetch(`${API_URL}/scan`, {
@@ -141,31 +129,35 @@ async function incrementScan(postId) {
     } catch (e) { console.error("Scan error:", e); }
 }
 
-// Function to handle Real-time Vote
-async function handleVote(btn, postId) {
+// یہ فنکشن اب ہر حال میں کلک قبول کرے گا
+window.handleVote = async function(btn, postId) {
     if (btn.classList.contains('voted')) return;
     try {
-        // UI Update first for speed
+        // اسکرین پر فوری طور پر گنتی بڑھائیں
         const pwrEl = document.getElementById(`pwr-${postId}`);
-        let currentVotes = parseInt(pwrEl.textContent) || 0;
-        pwrEl.textContent = (currentVotes + 1) + " PWR";
+        let currentVotes = parseInt(pwrEl.innerText) || 0;
+        pwrEl.innerText = (currentVotes + 1) + " PWR";
 
-        // Call API
+        // سرور کو ووٹ محفوظ کرنے کا میسج بھیجیں
         await fetch(`${API_URL}/vote`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: postId })
         });
 
+        // بٹن کا رنگ سبز کر دیں
         btn.classList.add('voted');
         btn.innerHTML = "✅ POWERED UP";
         btn.style.color = "#00ff88";
         btn.style.borderColor = "#00ff8840";
         btn.style.background = "rgba(0,255,136,0.1)";
-    } catch (e) { console.error("Vote error:", e); }
-}
+    } catch (e) { 
+        console.error("Vote error:", e); 
+    }
+};
 
 document.addEventListener('DOMContentLoaded', loadPosts);
+
                      
 
 /* ────────────────────────────────────────────────────────────────
