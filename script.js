@@ -38,9 +38,12 @@
 
 
 /* ────────────────────────────────────────────────────────────────
-   9. DYNAMIC POST LOADING — بغیر بیج اور درست ووٹنگ بٹن
+   9. DYNAMIC POST LOADING — فائنل ورژن (آواز اور ٹوگل ووٹ کے ساتھ)
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
+
+// کلک کی آواز سیٹ کرنا
+const voteSound = new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
 
 async function loadPosts() {
     const postsGrid = document.getElementById('posts-grid');
@@ -57,6 +60,7 @@ async function loadPosts() {
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             const fontSize = post.media_url ? "16px" : "19px";
 
+            // کمنٹس لوڈ کرنا
             let commentsHTML = '';
             if (post.comments && post.comments.length > 0) {
                 post.comments.forEach(c => {
@@ -114,6 +118,7 @@ async function loadPosts() {
             `;
             postsGrid.appendChild(postElement);
             
+            // پوسٹ لوڈ ہوتے ہی ویو (Scan) کی گنتی بڑھائیں
             incrementScan(post.id);
         });
     } catch (e) { console.error("Load Error:", e); }
@@ -129,34 +134,55 @@ async function incrementScan(postId) {
     } catch (e) { console.error("Scan error:", e); }
 }
 
-// یہ فنکشن اب ہر حال میں کلک قبول کرے گا
+// ووٹ کرنے اور واپس لینے کا مکمل فنکشن
 window.handleVote = async function(btn, postId) {
-    if (btn.classList.contains('voted')) return;
     try {
-        // اسکرین پر فوری طور پر گنتی بڑھائیں
+        // کلک کی آواز چلائیں
+        voteSound.play().catch(e => console.log("Sound error:", e));
+
         const pwrEl = document.getElementById(`pwr-${postId}`);
         let currentVotes = parseInt(pwrEl.innerText) || 0;
-        pwrEl.innerText = (currentVotes + 1) + " PWR";
 
-        // سرور کو ووٹ محفوظ کرنے کا میسج بھیجیں
-        await fetch(`${API_URL}/vote`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: postId })
-        });
+        if (btn.classList.contains('voted')) {
+            // ووٹ واپس لینا (Undo)
+            let newVotes = currentVotes > 0 ? currentVotes - 1 : 0;
+            pwrEl.innerText = newVotes + " PWR";
+            
+            fetch(`${API_URL}/vote`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: postId, action: 'remove' })
+            });
 
-        // بٹن کا رنگ سبز کر دیں
-        btn.classList.add('voted');
-        btn.innerHTML = "✅ POWERED UP";
-        btn.style.color = "#00ff88";
-        btn.style.borderColor = "#00ff8840";
-        btn.style.background = "rgba(0,255,136,0.1)";
+            btn.classList.remove('voted');
+            btn.innerHTML = "⚡ VOTE / POWER UP";
+            btn.style.color = "#0066ff";
+            btn.style.borderColor = "rgba(0,102,255,0.4)";
+            btn.style.background = "rgba(0,102,255,0.15)";
+
+        } else {
+            // نیا ووٹ دینا (Add)
+            pwrEl.innerText = (currentVotes + 1) + " PWR";
+
+            fetch(`${API_URL}/vote`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: postId, action: 'add' })
+            });
+
+            btn.classList.add('voted');
+            btn.innerHTML = "✅ POWERED UP";
+            btn.style.color = "#00ff88";
+            btn.style.borderColor = "#00ff8840";
+            btn.style.background = "rgba(0,255,136,0.1)";
+        }
     } catch (e) { 
         console.error("Vote error:", e); 
     }
 };
 
 document.addEventListener('DOMContentLoaded', loadPosts);
+
 
                      
 
