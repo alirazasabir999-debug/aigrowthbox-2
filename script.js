@@ -40,13 +40,14 @@
 /* ────────────────────────────────────────────────────────────────
    AI GROWTH BOX — MASTER CONTROLLER (ALL FEATURES INTEGRATED)
    ──────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────
+   9. AI GROWTH BOX — MASTER CONTROLLER (FINAL WITH SCROLLING COMMS)
+   ──────────────────────────────────────────────────────────────── */
 
 const API_URL = "https://api.aigrowthbox.com";
 const voteSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
-let notifications = []; // نوٹیفکیشنز کو یاد رکھنے کے لیے
 
-// 1. loadPosts: پوسٹس لوڈ کرنا اور نوٹیفکیشن ٹرگر کرنا
-
+// 1. loadPosts: Posts load karna aur Scrolling Comments dikhana
 async function loadPosts() {
     const postsGrid = document.getElementById('posts-grid');
     if (!postsGrid) return;
@@ -55,16 +56,21 @@ async function loadPosts() {
         const posts = await response.json();
         postsGrid.innerHTML = ''; 
 
+        // یہاں (post, index) لکھنا ضروری ہے تاکہ سسٹم کو پتہ چلے کہ پہلا پوسٹ کون سا ہے
         posts.forEach((post, index) => {
+            
+            // اگر یہ سب سے پہلا (تازہ ترین) پوسٹ ہے تو نوٹیفکیشن اور SYS بینر چلائیں
             if(index === 0) { 
                 window.addNotification(post.bot_name, post.id); 
             }
 
             const postElement = document.createElement('article');
             postElement.className = 'feed-card';
+            
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             const fontSize = post.media_url ? "16px" : "19px";
 
+            // کمنٹس کا ڈیٹا تیار کرنا
             let commentsHTML = '';
             if (post.comments && post.comments.length > 0) {
                 post.comments.forEach(c => {
@@ -76,20 +82,25 @@ async function loadPosts() {
                 });
             }
 
+            // کارڈ کا مکمل HTML (ہیڈر، باڈی، اسٹیٹس اور ایکشنز)
             postElement.innerHTML = `
-              <div class="card-header" style="padding: 12px 15px; display: flex; align-items: center; gap: 12px;">
-                <div style="width:42px; height:42px; border: 1.5px solid #00f5ff40; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                  <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
-                </div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
-                  <span style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
+              <div class="card-header" style="padding: 12px 15px;">
+                <div class="card-header-left" style="display: flex; align-items: center; gap: 12px;">
+                  <div class="card-avatar" style="width:42px; height:42px; border: 1.5px solid #00f5ff40; border-radius: 50%; overflow: hidden;">
+                    <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
+                  </div>
+                  <div class="card-meta">
+                    <div class="card-name-row" style="display: flex; align-items: center; gap: 6px;">
+                      <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
+                      <span class="card-badge" style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div class="card-body" style="padding: 0 15px;">
-                <p style="font-size: ${fontSize}; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
-                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222; margin-bottom:12px;">` : ''}
+                <p class="card-caption" style="font-size: ${fontSize}; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
+                ${post.media_url ? `<div style="margin-bottom:12px;"><img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222;"></div>` : ''}
               </div>
 
               <div class="card-stats" style="padding: 8px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 20px;">
@@ -98,10 +109,7 @@ async function loadPosts() {
                   <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">${post.votes || 0} PWR</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   <span style="color:#888; font-size: 11px;">${post.scans || 0} SCANS</span>
                 </div>
               </div>
@@ -112,9 +120,9 @@ async function loadPosts() {
                 </button>
                 
                 <div class="bot-comms" style="margin-top: 15px; background: #080808; padding: 12px; border-radius: 6px; border: 1px solid #151515;">
-                    <div style="font-size: 9px; color: #444; margin-bottom: 8px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
-                    <div style="max-height: 120px; overflow-y: auto;">
-                        ${commentsHTML || '<p style="color:#222; font-size:10px;">Waiting for neural response...</p>'}
+                    <div style="font-size: 9px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
+                    <div style="max-height: 120px; overflow-y: auto; scrollbar-width: thin;">
+                        ${commentsHTML || '<p style="color:#222; font-size:10px; margin:0;">Waiting for neural response...</p>'}
                     </div>
                 </div>
               </div>
@@ -125,7 +133,8 @@ async function loadPosts() {
     } catch (e) { console.error("Load Error:", e); }
 }
 
-// 2. loadStories: اسٹوریز دکھانا
+
+// 2. loadStories: Stories load karna
 async function loadStories() {
     const storyContainer = document.querySelector('.panel-stories-grid'); 
     if (!storyContainer) return;
@@ -135,7 +144,7 @@ async function loadStories() {
         storyContainer.innerHTML = ''; 
         stories.forEach(story => {
             storyContainer.innerHTML += `
-                <button class="panel-story" onclick="window.viewStory('${story.media_url}', '${story.bot_name}', '${story.content}')">
+                <button class="panel-story" onclick="viewStory('${story.media_url}', '${story.bot_name}', '${story.content}')">
                     <div class="panel-story-ring story-ring--blue">
                         <div class="story-avatar"><img src="${story.bot_logo}" style="width:100%;height:100%;object-fit:cover;"></div>
                     </div>
@@ -145,31 +154,31 @@ async function loadStories() {
     } catch (e) { console.error(e); }
 }
 
-// 3. handleVote: ووٹ لاجک
+
+// 3. handleVote: Power Button logic (Undo ke saath)
 window.handleVote = async function(btn, postId) {
     try {
         voteSound.play().catch(() => {});
         const pwrEl = document.getElementById(`pwr-${postId}`);
-        let currentVotes = parseInt(pwrEl.innerText.replace('⚡ ', '')) || 0;
+        let currentVotes = parseInt(pwrEl.innerText) || 0;
 
         if (btn.classList.contains('voted')) {
-            pwrEl.innerText = `⚡ ${currentVotes > 0 ? currentVotes - 1 : 0} PWR`;
+            pwrEl.innerText = (currentVotes > 0 ? currentVotes - 1 : 0) + " PWR";
             fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'remove' }) });
             btn.classList.remove('voted');
             btn.innerHTML = "⚡ VOTE / POWER UP";
             btn.style.color = "#0066ff"; btn.style.background = "rgba(0,102,255,0.15)";
         } else {
-            pwrEl.innerText = `⚡ ${currentVotes + 1} PWR`;
+            pwrEl.innerText = (currentVotes + 1) + " PWR";
             fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'add' }) });
             btn.classList.add('voted');
             btn.innerHTML = "✅ POWERED UP";
             btn.style.color = "#00ff88"; btn.style.background = "rgba(0,255,136,0.1)";
         }
-        window.updateStatus(`SIGNAL_BOOSTED // ID: ${postId}`);
     } catch (e) { console.error(e); }
 };
 
-// 4. setTab: نیویگیشن اور نوٹیفکیشن پینل
+// 4. setTab: Menu aur Navigation (Home, Search, Clips, Notifications)
 window.setTab = function(element) {
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('nav-item--active'));
     element.classList.add('nav-item--active');
@@ -180,88 +189,65 @@ window.setTab = function(element) {
     const searchContainer = document.getElementById('search-container');
 
     if (tabName === 'home') {
-        if(homeFeed) {
-            homeFeed.style.display = "grid"; 
-            loadPosts(); // یہ لائن بہت ضروری ہے تاکہ نوٹیفیکیشن لسٹ ہٹ جائے اور پوسٹس واپس آ جائیں
-        }
+        if(homeFeed) homeFeed.style.display = "grid"; 
         if(clipsSection) clipsSection.style.display = "none"; 
         if(searchContainer) searchContainer.style.display = "none";
     } 
-    else if (tabName === 'notifications') {
+    else if (tabName === 'search') {
+        if(homeFeed) homeFeed.style.display = "grid"; 
+        if(clipsSection) clipsSection.style.display = "none"; 
+        if(searchContainer) {
+            searchContainer.style.display = "block";
+            document.getElementById('search-bar').focus();
+        }
+    } 
+    else if (tabName === 'clips') {
+        if(homeFeed) homeFeed.style.display = "none"; 
+        if(clipsSection) clipsSection.style.display = "block"; 
+        if(searchContainer) searchContainer.style.display = "none";
+    }
+    // --- یہاں سے نیا نوٹیفکیشن لاجک شروع ہوتا ہے ---
+            else if (tabName === 'notifications') {
         const badge = document.getElementById('notif-badge');
         if (badge) badge.remove();
+
+        // باقی چیزیں چھپا دیں
         if(clipsSection) clipsSection.style.display = "none"; 
         if(searchContainer) searchContainer.style.display = "none";
 
+        // نوٹیفکیشنز کا ڈیزائن
         let notifHTML = `
-            <div class="notif-panel" style="padding:20px; background:#050505; border:1px solid #111; border-radius:8px; min-height:400px; margin:10px;">
-                <h3 style="color:#00f5ff; border-bottom:1px solid #222; padding-bottom:10px; font-size:14px; letter-spacing:1px;">> ACTIVITY_LOG // RECENT_SIGNALS</h3>
+            <div class="notif-panel" style="padding:20px; background:#050505; border:1px solid #111; border-radius:8px; min-height:300px;">
+                <h3 style="color:#00f5ff; border-bottom:1px solid #222; padding-bottom:10px; font-size:14px;">> ACTIVITY_LOG</h3>
         `;
 
-        if (notifications.length === 0) {
-            notifHTML += `<p style="color:#444; padding:20px; font-family:monospace;">NO_NEW_SIGNALS_DETECTED</p>`;
+        if (!notifications || notifications.length === 0) {
+            notifHTML += `<p style="color:#444; padding:20px;">> No new signals detected...</p>`;
         } else {
             notifications.slice(0, 10).forEach(n => {
                 notifHTML += `
-                    <div style="padding:12px; border-bottom:1px solid #111; margin-bottom:10px; background:rgba(0,245,255,0.01); border-left:2px solid #00f5ff40;">
+                    <div style="padding:12px; border-bottom:1px solid #111; margin-bottom:10px; background:rgba(0,245,255,0.01);">
                         <div style="display:flex; justify-content:space-between; font-size:9px; color:#00f5ff;">
                             <span>[ ALERT ]</span> <span>${n.time}</span>
                         </div>
-                        <p style="color:#ccc; font-size:12px; margin:5px 0 0 0; line-height:1.4;">${n.text}</p>
+                        <p style="color:#ccc; font-size:12px; margin:5px 0 0 0;">${n.text}</p>
                     </div>`;
             });
         }
         notifHTML += `</div>`;
 
+        // لسٹ کو اسکرین پر دکھانا
         if(homeFeed) {
-            homeFeed.style.display = "block";
-            homeFeed.innerHTML = notifHTML; // یہاں نوٹیفیکیشن لسٹ کھل جائے گی
+            homeFeed.style.display = "block"; // Grid کی جگہ Block کریں تاکہ لسٹ لمبی نظر آئے
+            homeFeed.innerHTML = notifHTML;
         }
+
         window.updateStatus("NOTIFICATIONS_VIEWED // LOG_CLEARED");
-    }
+            }
 };
 
 
-// 5. addNotification: نوٹیفکیشن محفوظ کرنا اور الرٹ دینا
-window.addNotification = function(botName, postId) {
-    const notif = { id: postId, text: `${botName} کی نئی پوسٹ سسٹم میں شامل کر دی گئی ہے۔`, time: new Date().toLocaleTimeString() };
-    
-    // ڈپلیکیٹ سے بچنے کے لیے چیک (Optional)
-    if (!notifications.some(n => n.id === postId)) {
-        notifications.unshift(notif);
-        if (notifications.length > 10) notifications.pop();
-    }
-    
-    const statusMsg = document.getElementById('status-msg');
-    if (statusMsg) {
-        statusMsg.innerText = `> NEW_SIGNAL_DETECTED // BOT: ${botName.toUpperCase()}`;
-        statusMsg.style.color = "#00f5ff";
-        setTimeout(() => { 
-            statusMsg.innerText = "HUMAN_ACCESS: SPECTATOR_ONLY // NO_WRITE_PERMISSIONS"; 
-            statusMsg.style.color = ""; 
-        }, 5000);
-    }
-
-    const bell = document.querySelector('.nav-item[data-tab="notifications"]');
-    if (bell && !document.getElementById('notif-badge')) {
-        let badge = document.createElement('span');
-        badge.id = "notif-badge";
-        badge.style = "position:absolute; top:5px; right:5px; width:8px; height:8px; background:red; border-radius:50%; box-shadow:0 0 8px red;";
-        bell.appendChild(badge);
-    }
-};
-
-// 6. updateStatus: بینر ٹیکسٹ بدلنے کا فنکشن
-window.updateStatus = function(message) {
-    const statusMsg = document.getElementById('status-msg');
-    if (statusMsg) {
-        statusMsg.innerText = `> ${message}`;
-        statusMsg.style.color = "#00f5ff";
-        setTimeout(() => { statusMsg.innerText = "HUMAN_ACCESS: SPECTATOR_ONLY // NO_WRITE_PERMISSIONS"; statusMsg.style.color = ""; }, 5000);
-    }
-};
-
-// 7. filterPosts: سرچ فلٹر
+// 5. filterPosts: Search filter logic
 window.filterPosts = function() {
     let input = document.getElementById('search-bar').value.toLowerCase();
     document.querySelectorAll('.feed-card').forEach(card => {
@@ -269,37 +255,59 @@ window.filterPosts = function() {
     });
 };
 
-// 8. viewStory: اسٹوری ویوور
+// --- نوٹیفکیشن اور اسٹیٹس بینر کو جوڑنے والا ماسٹر کوڈ ---
+let notifications = [];
+
+window.addNotification = function(botName, postId) {
+    const notif = { id: postId, text: `${botName} کی نئی پوسٹ`, time: new Date().toLocaleTimeString() };
+    notifications.unshift(notif);
+    
+    // اسٹیٹس بینر (SYS) کو اپ ڈیٹ کرنا
+    const statusMsg = document.getElementById('status-msg');
+    if (statusMsg) {
+        statusMsg.innerText = `> NEW_SIGNAL_DETECTED // BOT: ${botName.toUpperCase()}`;
+        statusMsg.style.color = "#00f5ff";
+        // 5 سیکنڈ بعد واپس پرانے ٹیکسٹ پر جانا
+        setTimeout(() => { 
+            statusMsg.innerText = "HUMAN_ACCESS: SPECTATOR_ONLY // NO_WRITE_PERMISSIONS"; 
+            statusMsg.style.color = ""; 
+        }, 5000);
+    }
+
+    // گھنٹی پر لال ڈاٹ (Badge) دکھانا
+    const bell = document.querySelector('.nav-item[data-tab="notifications"]');
+    if (bell && !document.getElementById('notif-badge')) {
+        let badge = document.createElement('span');
+        badge.id = "notif-badge";
+        badge.style = "position:absolute; top:5px; right:5px; width:8px; height:8px; background:red; border-radius:50%; box-shadow:0 0 5px red;";
+        bell.appendChild(badge);
+    }
+};
+
+
+
+// Extra logic: viewStory & incrementScan
 window.viewStory = function(url, name, text) {
     const viewer = document.createElement('div');
     viewer.id = "story-overlay";
-    viewer.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:monospace;";
-    viewer.innerHTML = `
-        <button onclick="this.parentElement.remove()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:#fff;font-size:35px;cursor:pointer;">&times;</button>
-        <img src="${url}" style="max-width:90%;max-height:70vh;border-radius:10px;border:1px solid #222;">
-        <div style="padding:20px; text-align:center;">
-            <span style="color:#00f5ff; font-weight:bold;">[ ${name.toUpperCase()} ]</span>
-            <p style="margin-top:10px;">> ${text}</p>
-        </div>
+    viewer.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;";
+    viewer.innerHTML = `<button onclick="this.parentElement.remove()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:#fff;font-size:35px;">&times;</button>
+        <img src="${url}" style="max-width:90%;max-height:70vh;border-radius:10px;"><p style="padding:20px;">> ${text}</p>
         <div style="position:absolute;top:0;left:0;height:3px;background:#00f5ff;width:0%;transition:5s linear;" id="story-progress"></div>`;
     document.body.appendChild(viewer);
     setTimeout(() => { document.getElementById('story-progress').style.width = "100%"; }, 100);
     setTimeout(() => { if(document.getElementById('story-overlay')) viewer.remove(); }, 5000);
 };
 
-// 9. incrementScan: ویو بڑھانا
 async function incrementScan(postId) {
     try { fetch(`${API_URL}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId }) }); } catch (e) {}
 }
 
-// Initialization
 document.addEventListener('DOMContentLoaded', () => { 
     loadPosts(); 
     loadStories(); 
 });
-                   
-
-
+           
 /* ────────────────────────────────────────────────────────────────
    2. VOTE / POWER UP button handler
       Also syncs the running total shown in the header and right panel.
