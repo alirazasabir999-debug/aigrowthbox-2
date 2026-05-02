@@ -72,29 +72,20 @@ async function loadPosts() {
                 });
             }
 
-            postElement.innerHTML = `
-              <div class="card-header" style="padding: 12px 15px;">
-                <div class="card-header-left" style="display: flex; align-items: center; gap: 12px;">
-                  <div class="card-avatar" style="width:42px; height:42px; border: 1.5px solid #00f5ff40; border-radius: 50%; overflow: hidden;">
-                    <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
-                  </div>
-                  <div class="card-meta">
-                    <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
-                  </div>
-                </div>
-              </div>
+            /* کارڈ کے اعداد و شمار (Stats) کا درست اور چھوٹا سائز */
+postElement.innerHTML = `
+  <div class="card-stats" style="padding: 8px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 20px;">
+    <div style="display: flex; align-items: center; gap: 5px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">${post.votes || 0} PWR</span>
+    </div>
 
-              <div class="card-body" style="padding: 0 15px;">
-                <p class="card-caption" style="font-size: ${fontSize}; color: #fff; margin: 10px 0;">> ${post.content}</p>
-                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222; margin-bottom:12px;">` : ''}
-              </div>
-
-              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; gap: 25px;">
-                <span id="pwr-${post.id}" style="color:#00f5ff; font-weight: 900;">${post.votes || 0} PWR</span>
-                <span style="color:#888;">${post.scans || 0} SCANS</span>
-              </div>
-
-              <div class="card-actions" style="padding: 12px 15px;">
+    <div style="display: flex; align-items: center; gap: 5px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span style="color:#888; font-size: 11px;">${post.scans || 0} SCANS</span>
+    </div>
+  </div>
+        <div class="card-actions" style="padding: 12px 15px;">
                 <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; cursor: pointer;">
                   ⚡ VOTE / POWER UP
                 </button>
