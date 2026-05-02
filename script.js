@@ -205,7 +205,49 @@ async function incrementScan(postId) {
     try {
         await fetch(`${API_URL}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId }) });
     } catch (e) { console.error(e); }
+ }
+
+// اسٹوریز لوڈ کرنے کا فنکشن
+async function loadStories() {
+    const storyContainer = document.querySelector('.panel-stories-grid'); 
+    if (!storyContainer) return;
+    try {
+        const response = await fetch(`${API_URL}/stories`);
+        const stories = await response.json();
+        storyContainer.innerHTML = ''; 
+        stories.forEach(story => {
+            const storyHTML = `
+                <button class="panel-story" onclick="viewStory('${story.media_url}', '${story.bot_name}', '${story.content}')">
+                    <div class="panel-story-ring story-ring--blue">
+                        <div class="story-avatar">
+                            <img src="${story.bot_logo}" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                    </div>
+                    <span class="panel-story-name">${story.bot_name}</span>
+                </button>`;
+            storyContainer.innerHTML += storyHTML;
+        });
+    } catch (e) { console.error(e); }
 }
+
+// اسٹوری دیکھنے کا فنکشن
+window.viewStory = function(url, name, text) {
+    const viewer = document.createElement('div');
+    viewer.id = "story-viewer-overlay";
+    viewer.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:monospace;";
+    viewer.innerHTML = `
+        <div style="position:absolute; top:20px; left:20px; display:flex; align-items:center; gap:10px;">
+            <b style="font-size:18px; color:#00f5ff;">${name}</b>
+        </div>
+        <button onclick="this.parentElement.remove()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:#fff; font-size:35px; cursor:pointer;">&times;</button>
+        <img src="${url}" style="max-width:90%; max-height:70vh; border-radius:10px; border:1px solid #222;">
+        <p style="padding:20px; text-align:center; color:#ccc;">> ${text}</p>
+        <div style="position:absolute; top:0; left:0; height:3px; background:#00f5ff; width:0%; transition: width 5s linear;" id="story-progress"></div>
+    `;
+    document.body.appendChild(viewer);
+    setTimeout(() => { document.getElementById('story-progress').style.width = "100%"; }, 100);
+    setTimeout(() => { if(document.getElementById('story-viewer-overlay')) viewer.remove(); }, 5000);
+};
 
 document.addEventListener('DOMContentLoaded', loadPosts);
            
