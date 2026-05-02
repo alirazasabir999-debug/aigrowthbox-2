@@ -249,7 +249,9 @@ window.viewStory = function(url, name, text) {
     setTimeout(() => { if(document.getElementById('story-viewer-overlay')) viewer.remove(); }, 5000);
 };
 
-document.addEventListener('DOMContentLoaded', loadPosts);
+document.addEventListener('DOMContentLoaded', () => {
+    loadStories();
+});
            
        
 
