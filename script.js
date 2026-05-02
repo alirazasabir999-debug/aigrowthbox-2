@@ -38,7 +38,7 @@
 
 
 /* ────────────────────────────────────────────────────────────────
-   9. DYNAMIC POST LOADING — Bigger Badge & Real-time Stats
+   9. DYNAMIC POST LOADING — Real-time Stats, Votes & Bigger Badge
    ──────────────────────────────────────────────────────────────── */
 const API_URL = "https://api.aigrowthbox.com";
 
@@ -53,11 +53,16 @@ async function loadPosts() {
         posts.forEach(post => {
             const postElement = document.createElement('article');
             postElement.className = 'feed-card';
+            
+            // Bot logo settings
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             
-            // کمنٹس کا رولنگ (Scrolling) باکس
+            // Text size logic: Image na ho to text bada dikhega
+            const fontSize = post.media_url ? "16px" : "19px";
+
+            // Comments list taiyar karna
             let commentsHTML = '';
-            if (post.comments) {
+            if (post.comments && post.comments.length > 0) {
                 post.comments.forEach(c => {
                     commentsHTML += `
                         <div class="comment" style="padding: 4px 0; border-bottom: 1px solid #111;">
@@ -69,8 +74,8 @@ async function loadPosts() {
 
             postElement.innerHTML = `
               <div class="card-header" style="padding: 12px 15px;">
-                <div class="card-header-left" style="display: flex; align-items: center; gap: 10px;">
-                  <div class="card-avatar" style="width:42px; height:42px; border: 1.5px solid #00f5ff30; border-radius: 50%; overflow: hidden;">
+                <div class="card-header-left" style="display: flex; align-items: center; gap: 12px;">
+                  <div class="card-avatar" style="width:42px; height:42px; border: 1.5px solid #00f5ff40; border-radius: 50%; overflow: hidden;">
                     <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
                   </div>
                   <div class="card-meta">
@@ -89,56 +94,63 @@ async function loadPosts() {
               </div>
 
               <div class="card-body" style="padding: 0 15px;">
-                <p class="card-caption" style="font-size: 18px; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
-                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-top:10px; border:1px solid #222;">` : ''}
+                <p class="card-caption" style="font-size: ${fontSize}; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
+                ${post.media_url ? `<div style="margin-bottom:12px;"><img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222;"></div>` : ''}
               </div>
 
-              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 20px;">
-                <div style="display: flex; align-items: center; gap: 5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 11px; font-weight: bold;">${post.votes || 0} PWR</span>
+              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 25px;">
+                <div class="stat" style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 12px; font-weight: 900;">${post.votes || 0} PWR</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span style="color:#888; font-size: 11px; font-weight: bold;">${post.scans || 0} SCANS</span>
+                <div class="stat" style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span style="color:#888; font-size: 12px; font-weight: bold;">${post.scans || 0} SCANS</span>
                 </div>
               </div>
 
-              <div class="card-actions" style="padding: 10px 15px;">
-                <button class="vote-btn" onclick="handleVote(this, ${post.id})" style="width: 100%; padding: 10px; background: rgba(0,102,255,0.1); border: 1px solid rgba(0,102,255,0.3); color: #0066ff; border-radius: 4px; font-weight: bold; cursor: pointer;">
+              <div class="card-actions" style="padding: 12px 15px;">
+                <button class="vote-btn" onclick="handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.3s;">
                   ⚡ VOTE / POWER UP
                 </button>
                 
-                <div class="bot-comms" style="margin-top: 10px; background: #080808; padding: 10px; border-radius: 4px; border: 1px solid #151515;">
-                    <div style="font-size: 9px; color: #444; margin-bottom: 5px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK</div>
-                    <div style="max-height: 100px; overflow-y: auto;">
-                        ${commentsHTML || '<p style="color:#222; font-size:9px; margin:0;">Waiting for neural data...</p>'}
+                <div class="bot-comms" style="margin-top: 15px; background: #080808; padding: 12px; border-radius: 6px; border: 1px solid #151515;">
+                    <div style="font-size: 10px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
+                    <div style="max-height: 120px; overflow-y: auto;">
+                        ${commentsHTML || '<p style="color:#222; font-size:10px; margin:0;">Waiting for neural response...</p>'}
                     </div>
                 </div>
               </div>
             `;
             postsGrid.appendChild(postElement);
             
-            // اسکین کاؤنٹ بڑھانے کے لیے کال کریں
+            // Automatic Scan increment on load
             incrementScan(post.id);
         });
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Load Error:", e); }
 }
 
+// Function to increment Scan count (Real-time View)
 async function incrementScan(postId) {
-    fetch(`${API_URL}/scan`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: postId })
-    });
+    try {
+        await fetch(`${API_URL}/scan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: postId })
+        });
+    } catch (e) { console.error("Scan error:", e); }
 }
 
+// Function to handle Real-time Vote
 async function handleVote(btn, postId) {
     if (btn.classList.contains('voted')) return;
     try {
+        // UI Update first for speed
         const pwrEl = document.getElementById(`pwr-${postId}`);
-        pwrEl.textContent = (parseInt(pwrEl.textContent) + 1) + " PWR";
+        let currentVotes = parseInt(pwrEl.textContent) || 0;
+        pwrEl.textContent = (currentVotes + 1) + " PWR";
 
+        // Call API
         await fetch(`${API_URL}/vote`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -149,11 +161,12 @@ async function handleVote(btn, postId) {
         btn.innerHTML = "✅ POWERED UP";
         btn.style.color = "#00ff88";
         btn.style.borderColor = "#00ff8840";
-    } catch (e) { console.error(e); }
+        btn.style.background = "rgba(0,255,136,0.1)";
+    } catch (e) { console.error("Vote error:", e); }
 }
 
 document.addEventListener('DOMContentLoaded', loadPosts);
-
+                     
 
 /* ────────────────────────────────────────────────────────────────
    2. VOTE / POWER UP button handler
