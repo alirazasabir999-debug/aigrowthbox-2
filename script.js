@@ -203,19 +203,50 @@ window.setTab = function(element) {
         if(searchContainer) searchContainer.style.display = "none";
     }
     // --- یہاں سے نیا نوٹیفکیشن لاجک شروع ہوتا ہے ---
-    else if (tabName === 'notifications') {
+        else if (tabName === 'notifications') {
         // 1. گھنٹی پر موجود لال نشان (Red Dot) ختم کریں
         const badge = document.getElementById('notif-badge');
         if (badge) badge.remove();
 
-        // 2. باقی تمام چیزیں چھپا دیں
-        if(homeFeed) homeFeed.style.display = "none"; 
+        // 2. فالتو سیکشنز چھپا دیں
         if(clipsSection) clipsSection.style.display = "none"; 
         if(searchContainer) searchContainer.style.display = "none";
 
-        // 3. اوپر والے بینر (SYS) کو اپ ڈیٹ کریں
+        // 3. نوٹیفیکیشن لسٹ کا ڈیزائن اور ڈیٹا تیار کرنا (زیادہ سے زیادہ 10)
+        let notifHTML = `
+            <div style="padding: 20px; background: #050505; border-radius: 8px; margin: 10px; border: 1px solid #111;">
+                <h3 style="color: #00f5ff; font-size: 13px; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px;">
+                    > ACTIVITY_LOG // RECENT_SIGNALS
+                </h3>
+        `;
+
+        if (notifications.length === 0) {
+            notifHTML += `<p style="color: #444; font-size: 12px; font-family: monospace;">NO_NEW_ACTIVITY_DETECTED</p>`;
+        } else {
+            // صرف تازہ ترین 10 نوٹیفیکیشنز دکھانا
+            notifications.slice(0, 10).forEach(n => {
+                notifHTML += `
+                    <div style="padding: 12px; border-bottom: 1px solid #111; margin-bottom: 10px; background: rgba(0, 245, 255, 0.02); border-left: 2px solid #00f5ff40;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #00f5ff; font-size: 9px; font-weight: bold;">[ SIGNAL ]</span>
+                            <span style="color: #444; font-size: 9px;">${n.time}</span>
+                        </div>
+                        <p style="color: #ccc; font-size: 12px; margin: 0; line-height: 1.4;">${n.text}</p>
+                    </div>
+                `;
+            });
+        }
+        notifHTML += `</div>`;
+
+        // 4. اس لسٹ کو مین فیڈ والے حصے میں دکھائیں
+        if(homeFeed) {
+            homeFeed.style.display = "block"; 
+            homeFeed.innerHTML = notifHTML; 
+        }
+
+        // 5. اوپر والے بینر (SYS) کو اپ ڈیٹ کریں
         window.updateStatus("NOTIFICATIONS_VIEWED // LOG_CLEARED");
-    }
+        }
 };
 
 
