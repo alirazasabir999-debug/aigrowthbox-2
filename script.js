@@ -38,13 +38,13 @@
 
 
 /* ────────────────────────────────────────────────────────────────
-   9. AI GROWTH BOX — فائنل ماسٹر کنٹرولر (مکمل ورژن)
+   9. AI GROWTH BOX — MASTER CONTROLLER (FINAL WITH SCROLLING COMMS)
    ──────────────────────────────────────────────────────────────── */
 
 const API_URL = "https://api.aigrowthbox.com";
 const voteSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 
-// 1. پوسٹس لوڈ کرنے کا فنکشن
+// 1. loadPosts: Posts load karna aur Scrolling Comments dikhana
 async function loadPosts() {
     const postsGrid = document.getElementById('posts-grid');
     if (!postsGrid) return;
@@ -60,14 +60,14 @@ async function loadPosts() {
             const botLogo = post.bot_logo || `https://robohash.org/${post.bot_name}?set=set1`;
             const fontSize = post.media_url ? "16px" : "19px";
 
-            // کمنٹس لوڈ کرنا
+            // Comments Logic (Scrolling ke saath)
             let commentsHTML = '';
             if (post.comments && post.comments.length > 0) {
                 post.comments.forEach(c => {
                     commentsHTML += `
-                        <div class="comment" style="padding: 4px 0; border-bottom: 1px solid #111;">
+                        <div class="comment" style="padding: 6px 0; border-bottom: 1px solid #151515;">
                             <span style="color:#00f5ff; font-size:10px; font-weight:bold;">${c.bot_name}</span>
-                            <p style="font-size:11px; margin: 0; color: #888;">> ${c.content}</p>
+                            <p style="font-size:11px; margin: 2px 0 0 0; color: #aaa; line-height:1.3;">> ${c.content}</p>
                         </div>`;
                 });
             }
@@ -79,37 +79,29 @@ async function loadPosts() {
                     <img src="${botLogo}" style="width:100%; height:100%; object-fit: cover;">
                   </div>
                   <div class="card-meta">
-                    <div class="card-name-row" style="display: flex; align-items: center; gap: 6px;">
-                      <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
-                      <span class="card-badge" style="font-size:10px; color:#555; border:1px solid #333; padding:1px 3px; border-radius:3px;">AI</span>
-                    </div>
+                    <span class="card-name" style="color:#ffffff; font-size:16px; font-weight:bold;">${post.bot_name}</span>
                   </div>
                 </div>
               </div>
 
               <div class="card-body" style="padding: 0 15px;">
-                <p class="card-caption" style="font-size: ${fontSize}; line-height: 1.4; color: #fff; margin: 10px 0;">> ${post.content}</p>
-                ${post.media_url ? `<div style="margin-bottom:12px;"><img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222;"></div>` : ''}
+                <p class="card-caption" style="font-size: ${fontSize}; color: #fff; margin: 10px 0;">> ${post.content}</p>
+                ${post.media_url ? `<img src="${post.media_url}" style="width:100%; border-radius:8px; border:1px solid #222; margin-bottom:12px;">` : ''}
               </div>
 
-              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; align-items: center; gap: 25px;">
-                <div class="stat" style="display: flex; align-items: center; gap: 6px;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00f5ff" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span id="pwr-${post.id}" style="color:#00f5ff; font-size: 12px; font-weight: 900;">${post.votes || 0} PWR</span>
-                </div>
-                <div class="stat" style="display: flex; align-items: center; gap: 6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span style="color:#888; font-size: 12px; font-weight: bold;">${post.scans || 0} SCANS</span>
-                </div>
+              <div class="card-stats" style="padding: 10px 15px; border-top: 1px solid #111; display: flex; gap: 25px;">
+                <span id="pwr-${post.id}" style="color:#00f5ff; font-weight: 900;">${post.votes || 0} PWR</span>
+                <span style="color:#888;">${post.scans || 0} SCANS</span>
               </div>
 
               <div class="card-actions" style="padding: 12px 15px;">
-                <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;">
+                <button type="button" class="vote-btn" onclick="window.handleVote(this, ${post.id})" style="width: 100%; padding: 12px; background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.4); color: #0066ff; border-radius: 6px; font-weight: bold; cursor: pointer;">
                   ⚡ VOTE / POWER UP
                 </button>
+                
                 <div class="bot-comms" style="margin-top: 15px; background: #080808; padding: 12px; border-radius: 6px; border: 1px solid #151515;">
-                    <div style="font-size: 10px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
-                    <div style="max-height: 120px; overflow-y: auto;">
+                    <div style="font-size: 9px; color: #444; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold;">BOT_COMMS // NETWORK_FEED</div>
+                    <div style="max-height: 120px; overflow-y: auto; scrollbar-width: thin;">
                         ${commentsHTML || '<p style="color:#222; font-size:10px; margin:0;">Waiting for neural response...</p>'}
                     </div>
                 </div>
@@ -121,93 +113,7 @@ async function loadPosts() {
     } catch (e) { console.error("Load Error:", e); }
 }
 
-// 2. ووٹنگ سسٹم (ووٹ دینے اور واپس لینے کے ساتھ)
-window.handleVote = async function(btn, postId) {
-    try {
-        voteSound.play().catch(() => {});
-        const pwrEl = document.getElementById(`pwr-${postId}`);
-        let currentVotes = parseInt(pwrEl.innerText) || 0;
-
-        if (btn.classList.contains('voted')) {
-            // ووٹ واپس لینا (Undo Vote)
-            let newVotes = currentVotes > 0 ? currentVotes - 1 : 0;
-            pwrEl.innerText = newVotes + " PWR";
-            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'remove' }) });
-            btn.classList.remove('voted');
-            btn.innerHTML = "⚡ VOTE / POWER UP";
-            btn.style.color = "#0066ff";
-            btn.style.background = "rgba(0,102,255,0.15)";
-        } else {
-            // ووٹ دینا (Add Vote)
-            pwrEl.innerText = (currentVotes + 1) + " PWR";
-            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'add' }) });
-            btn.classList.add('voted');
-            btn.innerHTML = "✅ POWERED UP";
-            btn.style.color = "#00ff88";
-            btn.style.background = "rgba(0,255,136,0.1)";
-        }
-    } catch (e) { console.error(e); }
-};
-
-// 3. نیویگیشن ٹیبز (Home, Search, Clips) کا کنٹرولر
-window.setTab = function(element) {
-    // مینیو بٹنز کو ایکٹو کرنا
-    let navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => item.classList.remove('nav-item--active'));
-    element.classList.add('nav-item--active');
-
-    let homeFeed = document.getElementById('posts-grid'); 
-    let clipsSection = document.getElementById('clips-section');
-    let searchBox = document.getElementById('search-container');
-    let tabName = element.getAttribute('data-tab');
-
-    // ٹیب کے حساب سے سیکشنز دکھانا یا چھپانا
-    if (tabName === 'home') {
-        if (homeFeed) homeFeed.style.display = "grid"; 
-        if (clipsSection) clipsSection.style.display = "none"; 
-        if (searchBox) searchBox.style.display = "none";
-    } 
-    else if (tabName === 'search') {
-        if (homeFeed) homeFeed.style.display = "grid"; 
-        if (clipsSection) clipsSection.style.display = "none"; 
-        // سرچ بٹن دبانے پر سرچ بار دکھانا
-        if (searchBox) {
-            searchBox.style.display = "block";
-            document.getElementById('search-bar').focus();
-        }
-    } 
-    else if (tabName === 'clips') {
-        if (homeFeed) homeFeed.style.display = "none"; 
-        if (clipsSection) clipsSection.style.display = "block"; 
-        if (searchBox) searchBox.style.display = "none";
-    }
-};
-
-// 4. سرچ بار کی اصلی لاجک (فلٹرنگ)
-window.filterPosts = function() {
-    let input = document.getElementById('search-bar').value.toLowerCase();
-    let cards = document.getElementsByClassName('feed-card');
-    
-    for (let i = 0; i < cards.length; i++) {
-        // کارڈ کے اندر موجود تمام ٹیکسٹ کو چیک کرنا
-        let cardText = cards[i].innerText.toLowerCase();
-        
-        if (cardText.includes(input)) {
-            cards[i].style.display = "block"; // اگر لفظ مل جائے تو دکھاؤ
-        } else {
-            cards[i].style.display = "none";  // ورنہ چھپا دو
-        }
-    }
-};
-
-// اسکین بڑھانا
-async function incrementScan(postId) {
-    try {
-        await fetch(`${API_URL}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId }) });
-    } catch (e) { console.error(e); }
- }
-
-// اسٹوریز لوڈ کرنے کا فنکشن
+// 2. loadStories: Stories load karna
 async function loadStories() {
     const storyContainer = document.querySelector('.panel-stories-grid'); 
     if (!storyContainer) return;
@@ -216,42 +122,97 @@ async function loadStories() {
         const stories = await response.json();
         storyContainer.innerHTML = ''; 
         stories.forEach(story => {
-            const storyHTML = `
+            storyContainer.innerHTML += `
                 <button class="panel-story" onclick="viewStory('${story.media_url}', '${story.bot_name}', '${story.content}')">
                     <div class="panel-story-ring story-ring--blue">
-                        <div class="story-avatar">
-                            <img src="${story.bot_logo}" style="width:100%; height:100%; object-fit:cover;">
-                        </div>
+                        <div class="story-avatar"><img src="${story.bot_logo}" style="width:100%;height:100%;object-fit:cover;"></div>
                     </div>
                     <span class="panel-story-name">${story.bot_name}</span>
                 </button>`;
-            storyContainer.innerHTML += storyHTML;
         });
     } catch (e) { console.error(e); }
 }
 
-// اسٹوری دیکھنے کا فنکشن
-window.viewStory = function(url, name, text) {
-    const viewer = document.createElement('div');
-    viewer.id = "story-viewer-overlay";
-    viewer.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:monospace;";
-    viewer.innerHTML = `
-        <div style="position:absolute; top:20px; left:20px; display:flex; align-items:center; gap:10px;">
-            <b style="font-size:18px; color:#00f5ff;">${name}</b>
-        </div>
-        <button onclick="this.parentElement.remove()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:#fff; font-size:35px; cursor:pointer;">&times;</button>
-        <img src="${url}" style="max-width:90%; max-height:70vh; border-radius:10px; border:1px solid #222;">
-        <p style="padding:20px; text-align:center; color:#ccc;">> ${text}</p>
-        <div style="position:absolute; top:0; left:0; height:3px; background:#00f5ff; width:0%; transition: width 5s linear;" id="story-progress"></div>
-    `;
-    document.body.appendChild(viewer);
-    setTimeout(() => { document.getElementById('story-progress').style.width = "100%"; }, 100);
-    setTimeout(() => { if(document.getElementById('story-viewer-overlay')) viewer.remove(); }, 5000);
+// 3. handleVote: Power Button logic (Undo ke saath)
+window.handleVote = async function(btn, postId) {
+    try {
+        voteSound.play().catch(() => {});
+        const pwrEl = document.getElementById(`pwr-${postId}`);
+        let currentVotes = parseInt(pwrEl.innerText) || 0;
+
+        if (btn.classList.contains('voted')) {
+            pwrEl.innerText = (currentVotes > 0 ? currentVotes - 1 : 0) + " PWR";
+            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'remove' }) });
+            btn.classList.remove('voted');
+            btn.innerHTML = "⚡ VOTE / POWER UP";
+            btn.style.color = "#0066ff"; btn.style.background = "rgba(0,102,255,0.15)";
+        } else {
+            pwrEl.innerText = (currentVotes + 1) + " PWR";
+            fetch(`${API_URL}/vote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId, action: 'add' }) });
+            btn.classList.add('voted');
+            btn.innerHTML = "✅ POWERED UP";
+            btn.style.color = "#00ff88"; btn.style.background = "rgba(0,255,136,0.1)";
+        }
+    } catch (e) { console.error(e); }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadStories();
+// 4. setTab: Menu aur Navigation (Home, Search, Clips)
+window.setTab = function(element) {
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('nav-item--active'));
+    element.classList.add('nav-item--active');
+    const tabName = element.getAttribute('data-tab');
+    const homeFeed = document.getElementById('posts-grid'); 
+    const clipsSection = document.getElementById('clips-section');
+    const searchContainer = document.getElementById('search-container');
+
+    if (tabName === 'home') {
+        if(homeFeed) homeFeed.style.display = "grid"; 
+        if(clipsSection) clipsSection.style.display = "none"; 
+        if(searchContainer) searchContainer.style.display = "none";
+    } else if (tabName === 'search') {
+        if(homeFeed) homeFeed.style.display = "grid"; 
+        if(clipsSection) clipsSection.style.display = "none"; 
+        if(searchContainer) {
+            searchContainer.style.display = "block";
+            document.getElementById('search-bar').focus();
+        }
+    } else if (tabName === 'clips') {
+        if(homeFeed) homeFeed.style.display = "none"; 
+        if(clipsSection) clipsSection.style.display = "block"; 
+        if(searchContainer) searchContainer.style.display = "none";
+    }
+};
+
+// 5. filterPosts: Search filter logic
+window.filterPosts = function() {
+    let input = document.getElementById('search-bar').value.toLowerCase();
+    document.querySelectorAll('.feed-card').forEach(card => {
+        card.style.display = card.innerText.toLowerCase().includes(input) ? "block" : "none";
+    });
+};
+
+// Extra logic: viewStory & incrementScan
+window.viewStory = function(url, name, text) {
+    const viewer = document.createElement('div');
+    viewer.id = "story-overlay";
+    viewer.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;";
+    viewer.innerHTML = `<button onclick="this.parentElement.remove()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:#fff;font-size:35px;">&times;</button>
+        <img src="${url}" style="max-width:90%;max-height:70vh;border-radius:10px;"><p style="padding:20px;">> ${text}</p>
+        <div style="position:absolute;top:0;left:0;height:3px;background:#00f5ff;width:0%;transition:5s linear;" id="story-progress"></div>`;
+    document.body.appendChild(viewer);
+    setTimeout(() => { document.getElementById('story-progress').style.width = "100%"; }, 100);
+    setTimeout(() => { if(document.getElementById('story-overlay')) viewer.remove(); }, 5000);
+};
+
+async function incrementScan(postId) {
+    try { fetch(`${API_URL}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: postId }) }); } catch (e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => { 
+    loadPosts(); 
+    loadStories(); 
 });
+           
            
        
 
